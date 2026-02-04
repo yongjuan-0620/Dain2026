@@ -3,342 +3,1088 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>达因可乐定 2026 数字化战略中心</title>
+    <title>达因可乐定 患者流演进看板</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
-        body { font-family: 'Noto Sans SC', sans-serif; background: #fdf2f8; overflow: hidden; }
-        
-        /* 权限拦截层 */
-        #login-overlay {
-            position: fixed; inset: 0; z-index: 10000;
-            background: linear-gradient(135deg, #be185d 0%, #831843 100%);
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.5s ease;
-        }
-        .login-card {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 3rem; border-radius: 2.5rem; width: 90%; max-width: 450px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #1a2035; /* 深色背景 */
+            color: #d1d5db; /* 默认文字颜色 text-gray-300 */
+            overflow: hidden; /* 防止滚动条出现，如果内容过多可以调整 */
+            display: none; /* 默认隐藏页面内容，等待密码验证 */
         }
 
-        /* 侧边栏与布局 */
-        .sidebar-active { background: #be185d !important; color: white !important; border-radius: 12px; transform: scale(1.05); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideIn 0.5s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        
-        /* 策略卡片 */
-        .strategy-card { border-left: 4px solid #be185d; background: white; padding: 1rem; border-radius: 0.75rem; transition: all 0.3s; }
-        .strategy-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        /* 顶部标题 */
+        .main-title {
+            @apply text-white;
+        }
+        .subtitle {
+            @apply text-gray-400;
+        }
+
+        /* 年份选择器 */
+        .year-btn {
+            @apply px-4 py-2 text-sm font-bold rounded-full transition cursor-pointer;
+            background-color: #3f4a6e; /* 按钮默认背景 */
+            color: #d1d5db; /* 按钮默认文字颜色 */
+            border: none;
+        }
+        .year-btn.active {
+            background-color: #ec4899; /* pink-500 */
+            color: white;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5); /* 活性粉色发光 */
+        }
+        .year-btn:hover:not(.active) {
+            background-color: #4a557c; /* 稍亮一点的背景 */
+        }
+
+        /* 参数滑块样式 */
+        .param-slider {
+            @apply w-full h-2 rounded-lg appearance-none cursor-pointer;
+            background: linear-gradient(to right, #ec4899, #8b5cf6); /* 渐变色 */
+        }
+        .param-slider::-webkit-slider-thumb {
+            @apply appearance-none w-4 h-4 rounded-full shadow-lg;
+            background: white;
+            border: 2px solid #ec4899;
+        }
+        .param-slider::-moz-range-thumb {
+            @apply appearance-none w-4 h-4 rounded-full shadow-lg;
+            background: white;
+            border: 2px solid #ec4899;
+        }
+
+        /* 适用于 contenteditable 的样式，使其看起来像普通文本 */
+        .contenteditable-styled {
+            @apply p-0 border-none bg-transparent focus:outline-none focus:ring-0;
+            white-space: pre-wrap; /* 保留换行和空格 */
+            line-height: 1.5; /* 确保舒适的行高 */
+            min-height: 1em; /* 确保空时有高度 */
+            font-size: 0.875rem; /* 默认 text-sm */
+            color: #d1d5db; /* 默认文字颜色 */
+        }
+        /* 针对深色背景的可编辑内容 */
+        .contenteditable-dark {
+            @apply text-white;
+        }
+        /* PM洞察/策略贴士的字体更小 */
+        .contenteditable-xs {
+            font-size: 0.75rem; /* text-xs */
+        }
+
+        /* 可编辑数字输入框 */
+        .editable-input-number {
+            @apply w-20 p-1 text-base font-bold text-green-400 bg-gray-700 border border-gray-600 rounded-md text-center;
+        }
+
+        /* 品类份额的输入框 */
+        .category-share-input {
+            @apply w-16 p-1 text-sm font-bold text-gray-200 bg-gray-700 border border-gray-600 rounded-md text-center;
+        }
+
+        /* 统一的KPI/预测值显示样式 - 参照图片样式 */
+        .forecast-metric-container {
+            @apply flex flex-col items-center justify-center p-3 rounded-lg shadow-sm border border-gray-700; /* rounded-lg for more square corners */
+            background-color: #3f4a6e; /* 与年份按钮相似的背景 */
+        }
+        .forecast-metric-label {
+            @apply text-xs font-bold text-gray-400 uppercase mb-1; /* 字号缩小，加粗 */
+        }
+        /* 调整后的KPI值样式 */
+        .forecast-metric-value {
+            @apply text-2xl font-black; /* 更大更粗 */
+            color: #ec4899; /* 默认粉色，可根据具体KPI调整 */
+        }
+        /* 特殊颜色用于一些蓝色强调的KPIs */
+        .forecast-metric-value.blue {
+            color: #8b5cf6; /* 紫蓝色 */
+        }
+
+        .forecast-metric-unit {
+            @apply text-xs text-gray-500 mt-0;
+        }
+
+        /* 患者流模型中的进度条效果 */
+        .funnel-item {
+            @apply p-3 rounded-lg flex justify-between items-center;
+        }
+        .funnel-item-bg-1 { background-color: #3f4a6e; } /* 类似 KPI 容器背景 */
+        .funnel-item-bg-2 { background-color: #4a557c; } /* 稍深一点 */
+        .funnel-item-bg-3 { background-color: #55608a; } /* 更深 */
+        .funnel-item-bg-4 { background-color: #606b98; } /* 最深 */
+        .funnel-item-label { @apply text-sm font-bold text-gray-300; }
+        .funnel-item-value { @apply text-base font-bold text-white; }
+        .funnel-item-value.blue-highlight {
+            @apply text-lg font-black text-blue-300; /* 突出显示核心目标 */
+        }
+
+
+        /* 销售额大字显示 */
+        .current-revenue-display {
+            @apply text-pink-400; /* 粉色 */
+        }
+
+        /* Chart.js 图表样式覆盖 */
+        canvas {
+            background-color: transparent !important;
+        }
+        .chartjs-tooltip {
+            background-color: rgba(30, 41, 59, 0.9) !important; /* Tailwind gray-800 with opacity */
+            color: white !important;
+            border-radius: 0.75rem !important; /* rounded-xl */
+            padding: 12px !important;
+        }
+        .chartjs-tooltip-header-item, .chartjs-tooltip-body-item {
+            color: white !important;
+        }
+        .chartjs-tooltip-title {
+            font-size: 13px !important;
+            font-weight: bold !important;
+        }
+        .chartjs-tooltip-body {
+            font-size: 12px !important;
+        }
+
+        /* 品类份额排版优化 */
+        .category-share-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto; /* 品类名 | 输入框 | % | 治疗线 */
+            align-items: center;
+            gap: 0.5rem; /* 间距 */
+            font-size: 0.875rem; /* text-sm */
+            margin-bottom: 0.5rem;
+        }
+        .category-share-row span:first-child {
+             text-align: left;
+        }
+        .category-share-row .share-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            justify-self: end; /* 靠右对齐 */
+        }
+        .category-share-row .share-input-group .category-share-input {
+            width: 4rem; /* 统一输入框宽度 */
+        }
+        .category-share-row .share-unit {
+             font-weight: bold;
+             color: #d1d5db;
+        }
+        .category-share-row .treatment-line {
+            font-size: 0.75rem; /* text-xs */
+            color: #9ca3af; /* text-gray-400 */
+            text-align: right;
+            white-space: nowrap; /* 不换行 */
+        }
+        .category-share-row.clonidine { /* 可乐定行 */
+             font-weight: bold;
+             color: #34d399; /* text-emerald-400 */
+        }
+        .category-share-row.clonidine .treatment-line {
+            color: #d1d5db; /* 可乐定治疗线更亮 */
+        }
     </style>
 </head>
-<body class="flex h-screen text-slate-800">
+<body class="p-6 flex flex-col h-screen">
 
-    <!-- 1. 权限拦截层 (密钥: Dain2026) -->
-    <div id="login-overlay">
-        <div class="login-card text-center text-white">
-            <div class="mb-6 flex justify-center">
-                <div class="bg-white p-5 rounded-[2rem] shadow-xl text-pink-600">
-                    <i data-lucide="shield-check" class="w-14 h-14"></i>
+    <!-- 顶部标题 -->
+    <div class="mb-4">
+        <h1 class="text-4xl font-black main-title italic">达因可乐定 患者流演进看板</h1>
+        <p class="text-sm subtitle mt-1">中国儿童 ADHD 市场 | 2023-2035 动态预估 | 实时交互</p>
+    </div>
+
+    <!-- 年份选择器 -->
+    <div class="mb-6 flex gap-2 overflow-x-auto pb-2">
+        <button onclick="switchYear(2023)" class="year-btn" id="btn-2023">2023</button>
+        <button onclick="switchYear(2024)" class="year-btn" id="btn-2024">2024</button>
+        <button onclick="switchYear(2025)" class="year-btn" id="btn-2025">2025</button>
+        <button onclick="switchYear(2026)" class="year-btn active" id="btn-2026">2026</button>
+        <button onclick="switchYear(2027)" class="year-btn" id="btn-2027">2027</button>
+        <button onclick="switchYear(2028)" class="year-btn" id="btn-2028">2028</button>
+        <button onclick="switchYear(2029)" class="year-btn" id="btn-2029">2029</button>
+        <button onclick="switchYear(2030)" class="year-btn" id="btn-2030">2030</button>
+        <button onclick="switchYear(2031)" class="year-btn" id="btn-2031">2031</button>
+        <button onclick="switchYear(2032)" class="year-btn" id="btn-2032">2032</button>
+        <button onclick="switchYear(2033)" class="year-btn" id="btn-2033">2033</button>
+        <button onclick="switchYear(2034)" class="year-btn" id="btn-2034">2034</button>
+        <button onclick="switchYear(2035)" class="year-btn" id="btn-2035">2035</button>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- 左侧：参数调整面板 -->
+        <div class="lg:col-span-1 space-y-4 flex-shrink-0">
+            <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700 sticky top-0">
+                <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
+                    <i data-lucide="sliders"></i> 预估参数
+                </h3>
+
+                <!-- 人口基础参数 -->
+                <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
+                    <p class="text-xs font-black text-blue-400 uppercase mb-2">👶 人口基础参数</p>
+
+                    <label class="block text-xs font-bold text-gray-300 mb-1">6-17岁总人口 (万人) <span class="text-gray-500" id="param-year-hint-total-pop"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-total-pop" min="1000" max="25000" value="2500" oninput="updateParams()" class="param-slider">
+                        <span id="v-total-pop" class="text-sm font-bold text-blue-400 w-12 text-right">2500</span>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">城镇化率 (%) <span class="text-gray-500" id="param-year-hint-urban"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-urban" min="50" max="85" value="66" oninput="updateParams()" class="param-slider">
+                        <span id="v-urban" class="text-sm font-bold text-blue-400 w-10 text-right">66%</span>
+                    </div>
+                </div>
+
+                <!-- 患病及诊断参数 -->
+                <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
+                    <p class="text-xs font-black text-purple-400 uppercase mb-2">🔍 患病及诊断参数</p>
+
+                    <label class="block text-xs font-bold text-gray-300 mb-1">患病率 (%) <span class="text-gray-500" id="param-year-hint-prevalence"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-prevalence" min="3" max="10" value="6.2" step="0.1" oninput="updateParams()" class="param-slider">
+                        <span id="v-prevalence" class="text-sm font-bold text-purple-400 w-10 text-right">6.2%</span>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">诊断率 (%) <span class="text-gray-500" id="param-year-hint-diagnosis"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-diagnosis" min="5" max="40" value="15" oninput="updateParams()" class="param-slider">
+                        <span id="v-diagnosis" class="text-sm font-bold text-purple-400 w-10 text-right">15%</span>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">ADHD合并TD比例 (%) <span class="text-gray-500" id="param-year-hint-comorbid-td"></span></label>
+                    <div class="flex gap-2 items-center">
+                        <input type="range" id="p-comorbid-td" min="0" max="100" value="30" step="1" oninput="updateParams()" class="param-slider">
+                        <span id="v-comorbid-td" class="text-2xl font-black text-pink-400 w-16 text-right">30%</span>
+                    </div>
+                </div>
+
+                <!-- 用药相关参数 -->
+                <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
+                    <p class="text-xs font-black text-green-400 uppercase mb-2">💊 用药相关参数</p>
+
+                    <label class="block text-xs font-bold text-gray-300 mb-1">药物治疗比例 (%) <span class="text-gray-500" id="param-year-hint-treatment"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-treatment" min="30" max="90" value="70" oninput="updateParams()" class="param-slider">
+                        <span id="v-treatment" class="text-sm font-bold text-green-400 w-10 text-right">70%</span>
+                    </div>
+                </div>
+
+                <!-- 品类与品牌份额 -->
+                <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
+                    <p class="text-xs font-black text-orange-400 uppercase mb-2">📊 品类与品牌份额</p>
+
+                    <label class="block text-xs font-bold text-gray-300 mb-1">可乐定品类份额 (%) <span class="text-gray-500" id="param-year-hint-category-share"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-category-share" min="3" max="20" value="5" oninput="updateParams()" class="param-slider">
+                        <span id="v-category-share" class="text-sm font-bold text-orange-400 w-10 text-right">5%</span>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">可乐定中达因份额 (%) <span class="text-gray-500" id="param-year-hint-brand-share"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-brand-share" min="20" max="80" value="40" oninput="updateParams()" class="param-slider">
+                        <span id="v-brand-share" class="text-sm font-bold text-orange-400 w-10 text-right">40%</span>
+                    </div>
+                </div>
+
+                <!-- 处方与复购 -->
+                <div class="bg-gray-700 p-3 rounded-lg border border-gray-600">
+                    <p class="text-xs font-black text-pink-400 uppercase mb-2">🔄 处方与复购</p>
+
+                    <label class="block text-xs font-bold text-gray-300 mb-1">单次处方片数 <span class="text-gray-500" id="param-year-hint-prescription"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-prescription" min="14" max="90" value="30" oninput="updateParams()" class="param-slider">
+                        <span id="v-prescription" class="text-sm font-bold text-pink-400 w-12 text-right">30</span>
+                    </div>
+
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">年度复购次数 <span class="text-gray-500" id="param-year-hint-annual-count"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-annual-count" min="6" max="24" value="12" oninput="updateParams()" class="param-slider">
+                        <span id="v-annual-count" class="text-sm font-bold text-pink-400 w-10 text-right">12</span>
+                    </div>
+
+                    <!-- 新增产品单价 -->
+                    <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">产品单价 (元/片) <span class="text-gray-500" id="param-year-hint-unit-price"></span></label>
+                    <div class="flex gap-2">
+                        <input type="range" id="p-unit-price" min="0.5" max="12" value="2" step="0.1" oninput="updateParams()" class="param-slider">
+                        <span id="v-unit-price" class="text-sm font-bold text-pink-400 w-10 text-right">2.0</span>
+                    </div>
+                </div>
+
+                <button onclick="resetParams()" class="w-full mt-4 bg-gray-700 text-gray-300 py-2 rounded-lg font-bold text-xs hover:bg-gray-600 transition">
+                    重置参数
+                </button>
+            </div>
+        </div>
+
+        <!-- 右侧：数据看板 -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- 2023-2035 销售预估 (已移动到最上方) -->
+            <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700">
+                <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
+                    <i data-lucide="trending-up"></i> 2023-2035 销售预估 (<span id="forecast-model-year">2026</span>)
+                </h3>
+
+                <!-- 顶部的预测参数和预测销售额 -->
+                <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">药物治疗比例</p>
+                        <p class="forecast-metric-value" id="forecast-treatment-rate">70<span class="text-base">%</span></p>
+                    </div>
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">可乐定品类份额</p>
+                        <p class="forecast-metric-value" id="forecast-category-share">5<span class="text-base">%</span></p>
+                    </div>
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">达因可乐定份额</p>
+                        <p class="forecast-metric-value" id="forecast-brand-share">40<span class="text-base">%</span></p>
+                    </div>
+
+                    <!-- KPI 移动到这里，并采用统一格式 -->
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">预估患者数</p>
+                        <p class="forecast-metric-value" id="kpi-patients" style="color:#ec4899;"></p>
+                    </div>
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">预估销售额</p>
+                        <p class="forecast-metric-value blue" id="kpi-revenue"></p>
+                        <p class="forecast-metric-unit">万元</p>
+                    </div>
+                    <div class="forecast-metric-container">
+                        <p class="forecast-metric-label">人均年消费</p>
+                        <p class="forecast-metric-value blue" id="kpi-percapita"></p>
+                        <p class="forecast-metric-unit">元</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 text-white text-center p-4 rounded-xl mb-6">
+                    <p class="text-sm font-bold uppercase mb-1 text-gray-400">当前年份 (<span id="current-forecast-year">2035</span>) 预测销售额</p>
+                    <p class="text-5xl font-black current-revenue-display">¥<span id="current-forecast-revenue">0</span></p>
+                </div>
+
+                <!-- 趋势图 -->
+                <h4 class="font-bold text-gray-200 mb-4 flex items-center gap-2">
+                    <i data-lucide="line-chart"></i> 2023-2035 达因可乐定趋势外推 (全渠道)
+                </h4>
+                <div class="h-64 mb-6">
+                    <canvas id="trendChart"></canvas>
+                </div>
+
+                <!-- 测算逻辑明细 (2035) -->
+                <h4 class="font-bold text-gray-200 mb-3 flex items-center gap-2">
+                    <i data-lucide="calculator"></i> 测算逻辑明细 (<span id="calc-logic-year">2035</span>)
+                </h4>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-gray-400">6-17岁城市患儿</span></div><div class="text-right font-bold text-pink-400" id="calc-urban-children">0万</div>
+                    <div><span class="text-gray-400">确诊患儿数</span></div><div class="text-right font-bold text-pink-400" id="calc-diagnosed-children">0万</div>
+                    <div><span class="text-gray-400">可乐定品类人群</span></div><div class="text-right font-bold text-pink-400" id="calc-category-patients">0万</div>
+                    <div><span class="text-gray-400">达因覆盖人数</span></div><div class="text-right font-bold text-pink-400" id="calc-dain-coverage">0人</div>
+                </div>
+
+                <div class="bg-gray-700 p-3 rounded-lg mt-4 border border-gray-600">
+                    <p class="text-xs font-bold text-blue-400 flex items-start gap-1">
+                        <i data-lucide="lightbulb" class="w-4 h-4"></i> PM 策略贴士:
+                    </p>
+                    <div id="editable-pm-strategy-tip" contenteditable="true" class="contenteditable-styled contenteditable-xs text-blue-300" placeholder="输入PM策略贴士..."></div>
                 </div>
             </div>
-            <h1 class="text-3xl font-black mb-1 tracking-tighter">数字化战略中心</h1>
-            <p class="text-pink-200 text-xs mb-8 uppercase tracking-[0.3em] font-light">Internal Strategic System</p>
-            <input type="password" id="access-pw" class="w-full bg-white/10 border border-white/20 rounded-2xl py-4 px-6 text-white mb-4 text-center text-xl outline-none focus:ring-2 focus:ring-pink-300" placeholder="••••••••">
-            <button onclick="verify()" class="w-full bg-white text-pink-700 font-black py-4 rounded-2xl hover:bg-pink-50 transition active:scale-95 shadow-lg">启动系统</button>
-            <p id="err" class="text-xs text-pink-300 mt-4 opacity-0 font-bold">密钥验证失败</p>
+
+            <!-- 核心目标群 与 竞争壁垒建议 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 核心目标群 卡片 -->
+                <div class="bg-gray-800 p-4 rounded-[2rem] shadow-lg border border-gray-700 flex flex-col justify-between"> <!-- padding 调整为 p-4 -->
+                    <h3 class="text-lg font-bold text-pink-500 mb-2 flex items-center gap-2">
+                        <i data-lucide="target"></i> 核心目标群: ADHD+TD
+                    </h3>
+                    <div class="text-sm text-gray-300 mb-4">
+                        <div id="editable-target-group-text" contenteditable="true" class="contenteditable-styled" placeholder="输入核心目标群相关洞察..."></div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-lg border border-gray-600 text-center">
+                        <p class="text-xs font-bold text-green-400 uppercase">该亚组预估患者规模:</p>
+                        <div class="flex justify-center items-center gap-2 mt-1">
+                            <!-- 已改为自动计算显示 -->
+                            <span id="target-patient-group-size-display" class="text-3xl font-black text-pink-400">0.0</span>
+                            <span class="text-xl font-black text-pink-400">万</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 竞争壁垒建议 卡片 -->
+                <div class="bg-gray-800 p-4 rounded-[2rem] shadow-lg border border-gray-700 text-white"> <!-- padding 调整为 p-4 -->
+                    <h3 class="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
+                        <i data-lucide="shield-check"></i> 竞争壁垒建议
+                    </h3>
+                    <div id="editable-competition-text" contenteditable="true" class="contenteditable-styled contenteditable-dark text-gray-300" placeholder="输入竞争壁垒建议...">
+                        <ul>
+                            <li>强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。</li>
+                            <li>绑定“ADHD专家共识”,强化合并TD时的一线地位。</li>
+                            <li>差异化竞争:避开托莫西汀的集采红海。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 患者流模型 (城镇化过滤) 与 品类份额现状 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 患者流模型 (城镇化过滤) 卡片 -->
+                <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700">
+                    <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
+                        <i data-lucide="filter"></i> 患者流模型 (城镇化过滤) (<span id="funnel-year">2026</span>)
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="funnel-item funnel-item-bg-1">
+                            <span class="funnel-item-label">6-17岁总人口</span>
+                            <span class="funnel-item-value" id="f-total-pop">0亿</span>
+                        </div>
+                        <div class="funnel-item funnel-item-bg-2">
+                            <span class="funnel-item-label">城镇化覆盖人群</span>
+                            <span class="funnel-item-value" id="f-urban-pop">0万</span>
+                        </div>
+                        <div class="funnel-item funnel-item-bg-3">
+                            <span class="funnel-item-label text-indigo-300">ADHD 患病群</span>
+                            <span class="funnel-item-value" id="f-adhd-patients">0万</span>
+                        </div>
+                        <div class="funnel-item funnel-item-bg-4">
+                            <span class="funnel-item-label text-emerald-300">核心目标: ADHD+TD 亚组</span>
+                            <span class="funnel-item-value blue-highlight" id="f-target-patients">0万</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 品类份额现状 (2025) 卡片 -->
+                <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700 flex flex-col justify-between">
+                    <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart"></i> 品类份额现状 (<span id="category-share-year">2025</span>)
+                    </h3>
+                    <div class="space-y-2 mb-4">
+                        <!-- 哌甲酯类 -->
+                        <div class="category-share-row">
+                            <span class="text-gray-300">哌甲酯类（兴奋剂）</span>
+                            <div class="share-input-group">
+                                <input type="number" id="input-share-stimulant" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
+                            </div>
+                            <span class="share-unit">%</span>
+                            <span class="treatment-line">(一线)</span>
+                        </div>
+                        <!-- 托莫西汀 -->
+                        <div class="category-share-row">
+                            <span class="text-gray-300">托莫西汀（非兴奋剂）</span>
+                            <div class="share-input-group">
+                                <input type="number" id="input-share-atomoxetine" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
+                            </div>
+                            <span class="share-unit">%</span>
+                            <span class="treatment-line">(一线)</span>
+                        </div>
+                         <!-- 胍法辛 -->
+                        <div class="category-share-row">
+                            <span class="text-gray-300">胍法辛（非兴奋剂）</span>
+                            <div class="share-input-group">
+                                <input type="number" id="input-share-guanfacine" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
+                            </div>
+                            <span class="share-unit">%</span>
+                            <span class="treatment-line">(ADHD二线、ADHD+TD一线)</span>
+                        </div>
+                        <!-- 可乐定类 -->
+                        <div class="category-share-row clonidine">
+                            <span>可乐定类（非兴奋剂）</span>
+                            <div class="share-input-group">
+                                <span id="display-share-clonidine" class="text-base font-bold">0</span>
+                            </div>
+                            <span class="share-unit">%</span>
+                            <span class="treatment-line">(ADHD二线、ADHD+TD一线)</span>
+                        </div>
+                        <div class="text-red-400 text-xs mt-2 text-center" id="share-warning" style="display:none;">总份额不为100%！</div>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-lg mt-4 border border-gray-600">
+                        <p class="text-xs font-bold text-blue-400 flex items-start gap-1">
+                            <i data-lucide="lightbulb" class="w-4 h-4"></i> PM 洞察:
+                        </p>
+                        <div id="editable-pm-insight-text" contenteditable="true" class="contenteditable-styled contenteditable-xs text-blue-300" placeholder="输入PM洞察..."></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+<script>
+        // 确保所有JS代码在DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', () => {
+            const CORRECT_PASSWORD = "Main2026";
+            let passwordAttempts = 0;
 
-    <!-- 2. 主应用程序 -->
-    <div id="main-app" class="hidden flex w-full">
-        <!-- 侧边导航栏 -->
-        <nav class="w-80 bg-white border-r flex flex-col p-8 space-y-2 shadow-2xl z-50">
-            <div class="mb-12 flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-700 rounded-xl flex items-center justify-center text-white italic font-black text-xl shadow-lg">D</div>
-                <div>
-                    <span class="text-slate-800 font-black text-xl tracking-tighter block">DAIN 2026</span>
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Digital Strategy Center</span>
-                </div>
-            </div>
-            
-            <div class="space-y-2">
-                <button onclick="nav('summary')" id="btn-summary" class="w-full text-left px-5 py-4 flex items-center gap-4 text-slate-500 hover:bg-pink-50 sidebar-active transition">
-                    <i data-lucide="map"></i> 1. 业务计划概要
-                </button>
-                <button onclick="nav('strategy')" id="btn-strategy" class="w-full text-left px-5 py-4 flex items-center gap-4 text-slate-500 hover:bg-pink-50 transition">
-                    <i data-lucide="target"></i> 2. 推广策略全景
-                </button>
-                <button onclick="nav('patient')" id="btn-patient" class="w-full text-left px-5 py-4 flex items-center gap-4 text-slate-500 hover:bg-pink-50 transition font-bold text-pink-600">
-                    <i data-lucide="line-chart"></i> 3. 2035 销量演进
-                </button>
-            </div>
-
-            <div class="mt-auto p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] text-white shadow-xl">
-                <p class="text-[10px] text-pink-400 font-bold uppercase mb-2 tracking-widest">2026 营收目标</p>
-                <div id="side-rev" class="text-3xl font-black italic text-white mb-1">¥ 0</div>
-                <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-                    <div class="bg-pink-500 h-full w-2/3"></div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- 内容主视窗 -->
-        <main class="flex-1 overflow-y-auto p-12 bg-slate-50/50">
-            
-            <!-- 板块 1: 业务计划概要 (整合版) -->
-            <section id="page-summary" class="tab-content active space-y-8">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-4xl font-black text-slate-900 tracking-tighter">2026 战略部署</h2>
-                        <p class="text-pink-600 font-bold mt-1 uppercase text-sm tracking-widest italic">Strategic Deployment Overview</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <button onclick="toggleEdit()" id="editBtn" class="bg-white border-2 border-slate-200 text-slate-600 px-6 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50 transition"><i data-lucide="eye"></i> 预览模式</button>
-                        <button onclick="save()" class="bg-pink-600 text-white px-6 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg hover:bg-pink-700 transition active:scale-95"><i data-lucide="save"></i> 保存全局计划</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 gap-6 edit-container">
-                    <div class="col-span-8 space-y-4">
-                        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-                            <h3 class="text-xs font-black text-pink-600 uppercase mb-4 tracking-widest">品牌愿景与核心定位</h3>
-                            <textarea id="v-vision" class="w-full text-xl font-bold p-2 outline-none border-b-2 border-slate-50 focus:border-pink-200 transition resize-none" rows="1" placeholder="品牌愿景: 成为ADHD非兴奋剂治疗的领导者"></textarea>
-                            <textarea id="v-pos" class="w-full text-sm text-slate-500 mt-2 p-2 outline-none border-b-2 border-slate-50 focus:border-pink-200 transition resize-none" rows="2" placeholder="产品定位: 针对伴随TD或无法耐受兴奋剂副作用的二线首选。"></textarea>
-                        </div>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="bg-pink-600 p-6 rounded-[2rem] text-white">
-                                <p class="text-[10px] font-bold opacity-80 uppercase">2026 目标额</p>
-                                <div class="flex items-baseline gap-1 mt-2">
-                                    <input type="number" id="v-target" oninput="upSide()" class="bg-transparent text-3xl font-black outline-none w-full" value="5000">
-                                    <span class="font-bold">万</span>
-                                </div>
-                            </div>
-                            <div class="bg-white p-6 rounded-[2rem] shadow-sm border col-span-2 flex items-center justify-around">
-                                <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">准入目标</p><p class="text-xl font-black text-slate-800">200+ 医院</p></div>
-                                <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">覆盖医生</p><p class="text-xl font-black text-slate-800">1,500+ 名</p></div>
-                                <div class="text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">患者获益</p><p class="text-xl font-black text-slate-800">50,000+ 人</p></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-span-4 bg-white p-8 rounded-[2rem] shadow-sm border-2 border-pink-100">
-                        <h3 class="text-xs font-black text-pink-600 uppercase mb-4 tracking-widest">核心 SWOT 矩阵</h3>
-                        <div class="grid grid-cols-2 gap-3 text-[10px]">
-                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 font-bold text-emerald-700">S: 儿科品牌背书、缓释剂型依从性强</div>
-                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 font-bold text-blue-700">W: 二线地位、学术心智尚在建设期</div>
-                            <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 font-bold text-amber-700">O: 兴奋剂管控严格、合并TD比例高</div>
-                            <div class="bg-red-50 p-3 rounded-xl border border-red-100 font-bold text-red-700">T: 托莫西汀集采、低价仿制药冲击</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 板块 2: 推广策略 (整合自 "可乐定推广策略.html") -->
-            <section id="page-strategy" class="tab-content space-y-8">
-                <h2 class="text-3xl font-black text-slate-900 italic">全方位推广策略看板</h2>
-                <div class="grid md:grid-cols-3 gap-6">
-                    <!-- 学术驱动 -->
-                    <div class="space-y-4">
-                        <div class="bg-pink-600 text-white p-4 rounded-2xl flex items-center gap-3 shadow-lg">
-                            <i data-lucide="graduation-cap"></i> <span class="font-black uppercase tracking-widest text-sm">学术引领</span>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-pink-600 mb-1">ADHD-TD 专家共识</p>
-                            <p class="text-[11px] text-slate-500">推动建立联合治疗路径，强化可乐定在合并抽动患者中的首选地位。</p>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-pink-600 mb-1">RWE 真实世界研究</p>
-                            <p class="text-[11px] text-slate-500">启动千例级中国患儿安全评价项目，积累本土有效性数据。</p>
-                        </div>
-                    </div>
-                    <!-- 准入与覆盖 -->
-                    <div class="space-y-4">
-                        <div class="bg-slate-800 text-white p-4 rounded-2xl flex items-center gap-3 shadow-lg">
-                            <i data-lucide="building"></i> <span class="font-black uppercase tracking-widest text-sm">准入加速</span>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-slate-700 mb-1">双通道覆盖</p>
-                            <p class="text-[11px] text-slate-500">重点省份国谈续约后，快速导入DTP药房及特药报销名单。</p>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-slate-700 mb-1">核心标杆医院</p>
-                            <p class="text-[11px] text-slate-500">2026年前完成150家核心三甲医院的进院流程。</p>
-                        </div>
-                    </div>
-                    <!-- 患者教育 -->
-                    <div class="space-y-4">
-                        <div class="bg-pink-100 text-pink-700 p-4 rounded-2xl flex items-center gap-3 border border-pink-200 shadow-sm">
-                            <i data-lucide="users"></i> <span class="font-black uppercase tracking-widest text-sm">患教闭环</span>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-pink-800 mb-1">依从性管理计划</p>
-                            <p class="text-[11px] text-slate-500">数字化随访小程序，提醒每日睡前服药，降低漏服率。</p>
-                        </div>
-                        <div class="strategy-card">
-                            <p class="text-xs font-black text-pink-800 mb-1">校园科普行</p>
-                            <p class="text-[11px] text-slate-500">联手儿科协会进入校园，帮助老师和家长正确识别ADHD症状。</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 板块 3: 销量推演 (整合自 "患者流2.html") -->
-            <section id="page-patient" class="tab-content space-y-8">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tighter italic">2023-2035 销量演进动态模型</h2>
-                    <div class="bg-white px-4 py-2 rounded-xl shadow-sm border text-[10px] font-bold text-slate-400">基于：城镇化率 × 诊断率 × 二线渗透率</div>
-                </div>
-
-                <div class="bg-indigo-950 p-8 rounded-[3rem] text-white shadow-2xl grid md:grid-cols-4 gap-8">
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest flex justify-between">城镇化率 <span id="l-urb" class="text-pink-400">66%</span></label>
-                        <input type="range" id="p-urb" min="60" max="85" value="66" oninput="calc()" class="w-full accent-pink-500">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest flex justify-between">诊断率提高 <span id="l-diag" class="text-pink-400">20%</span></label>
-                        <input type="range" id="p-diag" min="10" max="50" value="20" oninput="calc()" class="w-full accent-pink-500">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest flex justify-between">二线渗透率 <span id="l-share" class="text-pink-400">12%</span></label>
-                        <input type="range" id="p-share" min="5" max="40" value="12" oninput="calc()" class="w-full accent-pink-500">
-                    </div>
-                    <div class="bg-white/10 p-6 rounded-[2rem] text-center flex flex-col justify-center border border-white/10">
-                        <p class="text-[10px] font-bold text-pink-300 uppercase mb-1">2026 预估营收</p>
-                        <p id="out-rev-2026" class="text-3xl font-black italic">¥ 0</p>
-                    </div>
-                </div>
-                
-                <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 h-[500px]">
-                    <canvas id="mainChart"></canvas>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <script>
-        lucide.createIcons();
-        let chart;
-
-        // 权限验证
-        function verify() {
-            const pw = document.getElementById('access-pw').value;
-            if(pw === "Dain2026") {
-                document.getElementById('login-overlay').classList.add('opacity-0', 'pointer-events-none');
-                setTimeout(() => {
-                    document.getElementById('main-app').classList.remove('hidden');
-                    load();
-                    calc();
-                }, 500);
-            } else {
-                const err = document.getElementById('err');
-                err.classList.remove('opacity-0');
-                setTimeout(() => err.classList.add('opacity-0'), 2000);
-            }
-        }
-
-        // 导航控制
-        function nav(id) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('sidebar-active'));
-            document.getElementById('page-' + id).classList.add('active');
-            document.getElementById('btn-' + id).classList.add('sidebar-active');
-        }
-
-        // 保存加载
-        function save() {
-            const f = ['vision','pos','target'];
-            f.forEach(k => localStorage.setItem('site_v2_'+k, document.getElementById('v-'+k).value));
-            alert("战略数据已安全同步至云端（本地存储）。");
-        }
-        function load() {
-            const f = ['vision','pos','target'];
-            f.forEach(k => {
-                const v = localStorage.getItem('site_v2_'+k);
-                if(v) document.getElementById('v-'+k).value = v;
-            });
-            upSide();
-        }
-        function upSide() {
-            const val = document.getElementById('v-target').value;
-            document.getElementById('side-rev').innerText = "¥ " + Number(val).toLocaleString();
-        }
-
-        // 预览切换
-        let isPre = false;
-        function toggleEdit() {
-            isPre = !isPre;
-            const el = document.querySelectorAll('.edit-container textarea, .edit-container input');
-            el.forEach(i => {
-                if(isPre) { i.classList.add('border-transparent','bg-transparent'); i.readOnly = true; }
-                else { i.classList.remove('border-transparent','bg-transparent'); i.readOnly = false; }
-            });
-            document.getElementById('editBtn').innerHTML = isPre ? '<i data-lucide="edit"></i> 编辑模式' : '<i data-lucide="eye"></i> 预览模式';
-            lucide.createIcons();
-        }
-
-        // 销量演进模型计算 (整合自患者流文件逻辑)
-        function calc() {
-            const urb = document.getElementById('p-urb').value / 100;
-            const dia = document.getElementById('p-diag').value / 100;
-            const shr = document.getElementById('p-share').value / 100;
-            
-            document.getElementById('l-urb').innerText = (urb*100).toFixed(0) + "%";
-            document.getElementById('l-diag').innerText = (dia*100).toFixed(0) + "%";
-            document.getElementById('l-share').innerText = (shr*100).toFixed(0) + "%";
-
-            const yrs = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
-            const data = yrs.map(y => {
-                // 患者流转逻辑：人口基数 -> 城镇化 -> 发病率(6.2%) -> 诊断率 -> 二线用药比例(15%) -> 可乐定份额
-                const basePop = 17500 - (y-2023)*350; 
-                const treatedPop = basePop * urb * 0.062 * dia * 0.15;
-                let marketShare = 0.005; 
-                if(y >= 2026) marketShare = 0.01 + (shr - 0.01) * Math.min(1, (y-2026)/5);
-                const revenue = (treatedPop * marketShare * 10 * 150).toFixed(0);
-                if(y === 2026) document.getElementById('out-rev-2026').innerText = "¥ " + revenue + " 万";
-                return revenue;
-            });
-            updateChart(yrs, data);
-        }
-
-        function updateChart(labs, data) {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labs,
-                    datasets: [{
-                        label: '预估年度营收 (万)',
-                        data: data,
-                        borderColor: '#be185d',
-                        borderWidth: 6,
-                        backgroundColor: 'rgba(190, 24, 93, 0.05)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#be185d',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: '#1e293b', padding: 12, titleFont: {size: 14}, bodyFont: {size: 14} }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { weight: 'bold' } } },
-                        x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+            function authenticate() {
+                while (passwordAttempts < 3) { // 允许3次尝试
+                    const enteredPassword = prompt("请输入密码:");
+                    if (enteredPassword === CORRECT_PASSWORD) {
+                        document.body.style.display = 'flex'; // 显示页面内容
+                        lucide.createIcons(); // 初始化图标
+                        initializeDashboard(); // 初始化仪表板
+                        return true;
+                    } else if (enteredPassword === null) { // 用户点击取消
+                        alert("访问已取消。");
+                        window.location.href = "about:blank"; // 重定向到空白页
+                        return false;
+                    } else {
+                        passwordAttempts++;
+                        alert(`密码错误。您还有 ${3 - passwordAttempts} 次尝试机会。`);
                     }
                 }
-            });
-        }
+                alert("多次密码错误，访问被拒绝。");
+                window.location.href = "about:blank"; // 重定向到空白页
+                return false;
+            }
+
+            if (!authenticate()) {
+                return; // 如果认证失败，停止执行后续代码
+            }
+
+            let currentYear = 2026;
+            let trendChart = null;
+
+            // 初始默认参数
+            const initialParams = {
+                totalPop: 2500,      // 6-17岁总人口(万人)
+                urban: 66,            // 城镇化率(%)
+                prevalence: 6.2,      // 患病率(%)
+                diagnosis: 15,        // 诊断率(%) (原医院就诊率)
+                comorbidTD: 30,       // ADHD合并TD比例(%) - 新增
+                treatment: 70,        // 药物治疗比例(%)
+                categoryShare: 5,     // 可乐定品类份额(%)
+                brandShare: 40,       // 达因品牌份额(%)
+                prescription: 30,     // 单次处方片数
+                annualCount: 12,       // 年度复购次数
+                unitPrice: 2.0         // 产品单价 (元/片)
+            };
+            let params = { ...initialParams }; // 当前参数，会根据年份和用户修改而变化
+
+            // 存储每个年份的参数覆盖或调整
+            let yearSpecificParams = {};
+
+            // 存储 contenteditable 文本的初始默认内容
+            const initialEditableContents = {
+                targetGroup: "针对这部分20%-50%的合并抽动障碍患者，达因可乐定具有绝对临床首选推荐地位。",
+                competition: `<ul>
+                    <li>强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。</li>
+                    <li>绑定“ADHD专家共识”,强化合并TD时的一线地位。</li>
+                    <li>差异化竞争:避开托莫西汀的集采红海。</li>
+                </ul>`,
+                pmInsight: "2026达因上市需打破“二线治疗”标签,利用缓释片平稳性切入 ADHD+TD一线推荐。",
+                pmStrategy: "图表显示，如果诊断率在2030年能通过学术推广从15%提升至20%，达因的营收曲线将获得额外的35%增长空间。建议加大非专科医生的ADHD筛查培训。"
+            };
+            let editableContents = { ...initialEditableContents };
+
+            // 存储品类份额的独立编辑值
+            // 键是年份，值是一个对象 { stimulant: 45, atomoxetine: 35, guanfacine: 10 }
+            let yearSpecificCategoryShares = {};
+            // 默认值，当没有年份特定值时使用
+            const defaultCategoryShares = {
+                stimulant: 45,     // 默认哌甲酯类份额
+                atomoxetine: 35,   // 默认托莫西汀份额
+                guanfacine: 10     // 默认胍法辛份额 - 新增
+            };
+
+            // LocalStorage Keys
+            const LS_KEY_PARAMS = 'dainDashboard_yearSpecificParams';
+            const LS_KEY_CATEGORY_SHARES = 'dainDashboard_yearSpecificCategoryShares';
+            const LS_KEY_EDITABLE_CONTENTS = 'dainDashboard_editableContents';
+
+            // --- LocalStorage Helper Functions ---
+            function saveStateToLocalStorage() {
+                try {
+                    localStorage.setItem(LS_KEY_PARAMS, JSON.stringify(yearSpecificParams));
+                    localStorage.setItem(LS_KEY_CATEGORY_SHARES, JSON.stringify(yearSpecificCategoryShares));
+                    localStorage.setItem(LS_KEY_EDITABLE_CONTENTS, JSON.stringify(editableContents));
+                    // console.log("State saved to LocalStorage.");
+                } catch (e) {
+                    console.error("Error saving to LocalStorage:", e);
+                }
+            }
+
+            function loadStateFromLocalStorage() {
+                try {
+                    const savedParams = localStorage.getItem(LS_KEY_PARAMS);
+                    if (savedParams) {
+                        yearSpecificParams = JSON.parse(savedParams);
+                        // console.log("yearSpecificParams loaded:", yearSpecificParams);
+                    }
+
+                    const savedCategoryShares = localStorage.getItem(LS_KEY_CATEGORY_SHARES);
+                    if (savedCategoryShares) {
+                        yearSpecificCategoryShares = JSON.parse(savedCategoryShares);
+                        // console.log("yearSpecificCategoryShares loaded:", yearSpecificCategoryShares);
+                    }
+
+                    const savedEditableContents = localStorage.getItem(LS_KEY_EDITABLE_CONTENTS);
+                    if (savedEditableContents) {
+                        editableContents = JSON.parse(savedEditableContents);
+                        // console.log("editableContents loaded:", editableContents);
+                    }
+                    // console.log("State loaded from LocalStorage.");
+                } catch (e) {
+                    console.error("Error loading from LocalStorage, using defaults:", e);
+                    // 如果加载失败，确保使用默认值
+                    yearSpecificParams = {};
+                    yearSpecificCategoryShares = {};
+                    editableContents = { ...initialEditableContents };
+                }
+            }
+
+
+            // ====== 定义参数随年份演进的默认趋势 (重要！) ======
+            const getDefaultUrbanRate = (year) => {
+                if (year < 2023) return 65;
+                if (year > 2035) return 75;
+                return parseFloat((65 + (year - 2023) * ((75 - 65) / (2035 - 2023))).toFixed(1));
+            };
+
+            const getDefaultDiagnosisRate = (year) => { // 现在是“诊断率”
+                if (year < 2023) return 10;
+                if (year >= 2023 && year <= 2030) {
+                    return parseFloat((10 + (year - 2023) * ((20 - 10) / (2030 - 2023))).toFixed(1));
+                }
+                return 20;
+            };
+
+            const getDefaultTotalPop = (year) => {
+                // 假设总人口从2023年2500万，每年递减50万
+                if (year < 2023) return 2500;
+                // 允许最大值达到25000，但默认趋势还是基于2500
+                const initialPopVal = 2500; // 假设2023年的初始值
+                const decreaseRate = 50; // 每年递减50万人
+                const calculatedPop = initialPopVal - (year - 2023) * decreaseRate;
+                return Math.max(1000, calculatedPop); // 确保不低于某个合理值
+            };
+
+            // 其他参数的默认趋势函数，如果不需要年份趋势，则直接返回params当前值
+            const getDefaultPrevalence = (year) => params.prevalence;
+            const getDefaultComorbidTD = (year) => params.comorbidTD; // 新增
+            const getDefaultTreatment = (year) => params.treatment;
+            // 对于categoryShare和brandShare，它们在params对象中，但我们还需要考虑用户在左侧滑块的调整，所以这里直接从params取
+            const getDefaultCategoryShare = (year) => params.categoryShare;
+            const getDefaultBrandShare = (year) => params.brandShare;
+            const getDefaultPrescription = (year) => params.prescription;
+            const getDefaultAnnualCount = (year) => params.annualCount;
+            const getDefaultUnitPrice = (year) => params.unitPrice;
+
+
+            // 年份切换函数
+            window.switchYear = function(year) {
+                currentYear = year;
+                document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`btn-${year}`).classList.add('active');
+
+                loadYearParamsToUI(currentYear); // 将当前年份或用户覆盖的参数加载到UI
+                loadEditableContentsToUI(); // 加载可编辑内容
+                loadCategorySharesToUI(currentYear); // 加载品类份额的编辑值
+                updateDisplay(); // 重新计算并显示所有数据
+            };
+
+            // 将指定年份的参数加载到UI调整面板
+            function loadYearParamsToUI(year) {
+                // 获取该年份的基准参数值（默认趋势 + params中的当前值，如果未被yearSpecificParams覆盖）
+                let currentYearBaseParams = {
+                    totalPop: getDefaultTotalPop(year),
+                    urban: getDefaultUrbanRate(year),
+                    prevalence: params.prevalence, // 从当前params中取，以便用户滑动后保留
+                    diagnosis: getDefaultDiagnosisRate(year),
+                    comorbidTD: params.comorbidTD,
+                    treatment: params.treatment,
+                    categoryShare: params.categoryShare,
+                    brandShare: params.brandShare,
+                    prescription: params.prescription,
+                    annualCount: params.annualCount,
+                    unitPrice: params.unitPrice
+                };
+
+                // 如果有年份特定参数覆盖，则应用这些覆盖
+                if (yearSpecificParams[year]) {
+                    Object.assign(currentYearBaseParams, yearSpecificParams[year]);
+                }
+                
+                // 将最终参数设置到params对象，以便updateDisplay使用
+                Object.assign(params, currentYearBaseParams);
+
+                document.getElementById('p-total-pop').value = params.totalPop;
+                document.getElementById('v-total-pop').textContent = params.totalPop.toLocaleString();
+
+                document.getElementById('p-urban').value = params.urban.toFixed(0);
+                document.getElementById('v-urban').textContent = params.urban.toFixed(0) + '%';
+
+                document.getElementById('p-prevalence').value = params.prevalence.toFixed(1);
+                document.getElementById('v-prevalence').textContent = params.prevalence.toFixed(1) + '%';
+
+                document.getElementById('p-diagnosis').value = params.diagnosis.toFixed(0);
+                document.getElementById('v-diagnosis').textContent = params.diagnosis.toFixed(0) + '%';
+                
+                document.getElementById('p-comorbid-td').value = params.comorbidTD.toFixed(0);
+                document.getElementById('v-comorbid-td').textContent = params.comorbidTD.toFixed(0) + '%';
+
+                document.getElementById('p-treatment').value = params.treatment.toFixed(0);
+                document.getElementById('v-treatment').textContent = params.treatment.toFixed(0) + '%';
+
+                document.getElementById('p-category-share').value = params.categoryShare.toFixed(0);
+                document.getElementById('v-category-share').textContent = params.categoryShare.toFixed(0) + '%';
+
+                document.getElementById('p-brand-share').value = params.brandShare.toFixed(0);
+                document.getElementById('v-brand-share').textContent = params.brandShare.toFixed(0) + '%';
+
+                document.getElementById('p-prescription').value = params.prescription.toFixed(0);
+                document.getElementById('v-prescription').textContent = params.prescription.toFixed(0);
+
+                document.getElementById('p-annual-count').value = params.annualCount.toFixed(0);
+                document.getElementById('v-annual-count').textContent = params.annualCount.toFixed(0);
+
+                document.getElementById('p-unit-price').value = params.unitPrice.toFixed(1);
+                document.getElementById('v-unit-price').textContent = params.unitPrice.toFixed(1);
+
+                document.querySelectorAll('[id^="param-year-hint"]').forEach(hint => {
+                    hint.textContent = `(当前: ${year}年)`;
+                });
+            }
+
+            // 参数更新函数 (用户滑动滑块时调用)
+            window.updateParams = function() {
+                // 读取UI上的值更新params
+                params.totalPop = parseInt(document.getElementById('p-total-pop').value);
+                params.urban = parseInt(document.getElementById('p-urban').value);
+                params.prevalence = parseFloat(document.getElementById('p-prevalence').value);
+                params.diagnosis = parseInt(document.getElementById('p-diagnosis').value);
+                params.comorbidTD = parseInt(document.getElementById('p-comorbid-td').value);
+                params.treatment = parseInt(document.getElementById('p-treatment').value);
+                params.categoryShare = parseInt(document.getElementById('p-category-share').value);
+                params.brandShare = parseInt(document.getElementById('p-brand-share').value);
+                params.prescription = parseInt(document.getElementById('p-prescription').value);
+                params.annualCount = parseInt(document.getElementById('p-annual-count').value);
+                params.unitPrice = parseFloat(document.getElementById('p-unit-price').value);
+
+                // 更新UI显示
+                document.getElementById('v-total-pop').textContent = params.totalPop.toLocaleString();
+                document.getElementById('v-urban').textContent = params.urban + '%';
+                document.getElementById('v-prevalence').textContent = params.prevalence.toFixed(1) + '%';
+                document.getElementById('v-diagnosis').textContent = params.diagnosis + '%';
+                document.getElementById('v-comorbid-td').textContent = params.comorbidTD + '%';
+                document.getElementById('v-treatment').textContent = params.treatment + '%';
+                document.getElementById('v-category-share').textContent = params.categoryShare + '%';
+                document.getElementById('v-brand-share').textContent = params.brandShare + '%';
+                document.getElementById('v-prescription').textContent = params.prescription;
+                document.getElementById('v-annual-count').textContent = params.annualCount;
+                document.getElementById('v-unit-price').textContent = params.unitPrice.toFixed(1);
+
+                // 保存当前年份的参数到 yearSpecificParams，以便LocalStorage保存
+                yearSpecificParams[currentYear] = { ...params };
+                saveStateToLocalStorage();
+                updateDisplay();
+            };
+
+
+            // 计算当年数据，返回一个数据对象
+            function calcYearData(year) {
+                // 先获取该年份的“基准”参数值 (来自默认趋势或用户覆盖)
+                let effectiveParams = {
+                    totalPop: getDefaultTotalPop(year),
+                    urban: getDefaultUrbanRate(year),
+                    prevalence: getDefaultPrevalence(year),
+                    diagnosis: getDefaultDiagnosisRate(year),
+                    comorbidTD: getDefaultComorbidTD(year),
+                    treatment: getDefaultTreatment(year),
+                    categoryShare: getDefaultCategoryShare(year),
+                    brandShare: getDefaultBrandShare(year),
+                    prescription: getDefaultPrescription(year),
+                    annualCount: getDefaultAnnualCount(year),
+                    unitPrice: getDefaultUnitPrice(year)
+                };
+
+                // 如果有yearSpecificParams[year]的覆盖，应用它
+                if (yearSpecificParams[year]) {
+                    Object.assign(effectiveParams, yearSpecificParams[year]);
+                } else {
+                    // 如果没有yearSpecificParams，但params有值，确保使用params的当前值
+                    Object.assign(effectiveParams, params);
+                }
+
+
+                const urbanPop = effectiveParams.totalPop * (effectiveParams.urban / 100);
+                const adhd = urbanPop * (effectiveParams.prevalence / 100);
+                const diagnosed = adhd * (effectiveParams.diagnosis / 100);
+
+                // 核心目标群患者规模 - 使用新增的ADHD合并TD比例参数
+                const calculatedTargetGroupSize = diagnosed * (effectiveParams.comorbidTD / 100);
+
+                const treated = diagnosed * (effectiveParams.treatment / 100);
+                const category = treated * (effectiveParams.categoryShare / 100);
+                const dain = category * (effectiveParams.brandShare / 100);
+
+                const totalPieces = effectiveParams.prescription * effectiveParams.annualCount;
+                const revenue = (dain * 10000) * totalPieces * effectiveParams.unitPrice / 10000; // 使用 effectiveParams.unitPrice
+
+                return {
+                    totalPop: effectiveParams.totalPop,
+                    urbanPop: urbanPop,
+                    adhdPatients: adhd,
+                    diagnosedPatients: diagnosed,
+                    calculatedTargetGroupSize: calculatedTargetGroupSize,
+                    treatedPatients: treated,
+                    categoryPatients: category,
+                    dainPatients: dain,
+                    revenue: revenue,
+                    perCapita: dain > 0 ? (revenue * 10000) / (dain * 10000) : 0,
+                    // 将计算用的effectiveParams也返回，方便显示
+                    usedParams: effectiveParams
+                };
+            }
+
+            // 更新显示函数
+            function updateDisplay() {
+                const data = calcYearData(currentYear);
+                const usedParams = data.usedParams; // 获取计算时实际使用的参数
+
+                // 1. 核心目标群: ADHD+TD
+                const currentTargetGroupSize = (data.calculatedTargetGroupSize).toFixed(1);
+                document.getElementById('target-patient-group-size-display').textContent = currentTargetGroupSize;
+                // document.getElementById('editable-target-group-text').innerHTML 已经在 loadEditableContentsToUI 中处理
+
+                // 2. 竞争壁垒建议 - 已经在 loadEditableContentsToUI 中处理
+                // document.getElementById('editable-competition-text').innerHTML = editableContents.competition;
+
+                // 3. 患者流模型 (城镇化过滤)
+                document.getElementById('funnel-year').textContent = currentYear;
+                document.getElementById('f-total-pop').textContent = `${(data.totalPop / 1000).toFixed(1)}亿`;
+                document.getElementById('f-urban-pop').textContent = `${data.urbanPop.toFixed(0)}万`;
+                document.getElementById('f-adhd-patients').textContent = `${data.adhdPatients.toFixed(0)}万`;
+                document.getElementById('f-target-patients').textContent = `${currentTargetGroupSize}万`;
+
+
+                // 4. 品类份额现状
+                document.getElementById('category-share-year').textContent = currentYear;
+                // 品类份额输入框的值在 loadCategorySharesToUI 中加载
+                document.getElementById('display-share-clonidine').textContent = usedParams.categoryShare.toFixed(0);
+                // editable-pm-insight-text 已经在 loadEditableContentsToUI 中处理
+                
+                updateCategorySharesSumCheck(); // 确保总和检查器也更新
+
+                // 5. 销售预估
+                document.getElementById('forecast-model-year').textContent = currentYear;
+                document.getElementById('forecast-treatment-rate').innerHTML = `${usedParams.treatment.toFixed(0)}<span class="text-base">%</span>`;
+                document.getElementById('forecast-category-share').innerHTML = `${usedParams.categoryShare.toFixed(0)}<span class="text-base">%</span>`;
+                document.getElementById('forecast-brand-share').innerHTML = `${usedParams.brandShare.toFixed(0)}<span class="text-base">%</span>`;
+
+                document.getElementById('current-forecast-year').textContent = currentYear;
+                document.getElementById('current-forecast-revenue').textContent = data.revenue.toFixed(0);
+
+                // KPI 样式更新和值
+                document.getElementById('kpi-patients').textContent = (data.dainPatients * 10000).toLocaleString('zh-CN', {maximumFractionDigits: 0});
+                document.getElementById('kpi-revenue').textContent = '¥ ' + data.revenue.toFixed(0);
+                document.getElementById('kpi-percapita').textContent = '¥ ' + data.perCapita.toFixed(0);
+
+
+                // 测算逻辑明细
+                document.getElementById('calc-logic-year').textContent = currentYear;
+                document.getElementById('calc-urban-children').textContent = (data.urbanPop).toFixed(0) + '万';
+                document.getElementById('calc-diagnosed-children').textContent = (data.diagnosedPatients).toFixed(0) + '万';
+                document.getElementById('calc-category-patients').textContent = (data.categoryPatients).toFixed(1) + '万';
+                document.getElementById('calc-dain-coverage').textContent = (data.dainPatients * 10000).toLocaleString('zh-CN', {maximumFractionDigits: 0}) + '人';
+
+                // 6. PM 策略贴士 - 已经在 loadEditableContentsToUI 中处理
+                // document.getElementById('editable-pm-strategy-tip').innerHTML = editableContents.pmStrategy;
+
+                updateTrendChart();
+            }
+
+            // ====== contenteditable 文本和可编辑数字的辅助函数 ======
+
+            // 保存 contenteditable 文本内容
+            function saveEditableContent(id, key) {
+                editableContents[key] = document.getElementById(id).innerHTML;
+                saveStateToLocalStorage();
+            }
+
+            // 加载 contenteditable 文本内容到UI
+            function loadEditableContentsToUI() {
+                document.getElementById('editable-target-group-text').innerHTML = editableContents.targetGroup;
+                document.getElementById('editable-competition-text').innerHTML = editableContents.competition;
+                document.getElementById('editable-pm-insight-text').innerHTML = editableContents.pmInsight;
+                document.getElementById('editable-pm-strategy-tip').innerHTML = editableContents.pmStrategy;
+            }
+
+            // 监听 contenteditable 区域的输入事件
+            document.getElementById('editable-target-group-text').addEventListener('input', () => saveEditableContent('editable-target-group-text', 'targetGroup'));
+            document.getElementById('editable-competition-text').addEventListener('input', () => saveEditableContent('editable-competition-text', 'competition'));
+            document.getElementById('editable-pm-insight-text').addEventListener('input', () => saveEditableContent('editable-pm-insight-text', 'pmInsight'));
+            document.getElementById('editable-pm-strategy-tip').addEventListener('input', () => saveEditableContent('editable-pm-strategy-tip', 'pmStrategy'));
+
+
+            // 更新品类份额的总和校验
+            function updateCategorySharesSumCheck() {
+                const stimulant = parseFloat(document.getElementById('input-share-stimulant').value) || 0;
+                const atomoxetine = parseFloat(document.getElementById('input-share-atomoxetine').value) || 0;
+                const guanfacine = parseFloat(document.getElementById('input-share-guanfacine').value) || 0;
+                const clonidine = parseFloat(params.categoryShare) || 0; // 可乐定份额来自左侧参数
+
+                const total = stimulant + atomoxetine + guanfacine + clonidine;
+
+                const warningDiv = document.getElementById('share-warning');
+
+                if (Math.abs(total - 100) > 0.01) { // 允许浮点数误差
+                    warningDiv.style.display = 'block';
+                } else {
+                    warningDiv.style.display = 'none';
+                }
+            }
+
+            // 更新品类份额 (用户在输入框中修改时调用)
+            window.updateCategoryShares = function() {
+                const stimulant = parseFloat(document.getElementById('input-share-stimulant').value) || 0;
+                const atomoxetine = parseFloat(document.getElementById('input-share-atomoxetine').value) || 0;
+                const guanfacine = parseFloat(document.getElementById('input-share-guanfacine').value) || 0;
+
+                // 保存用户调整的品类份额到 yearSpecificCategoryShares
+                yearSpecificCategoryShares[currentYear] = {
+                    stimulant: stimulant,
+                    atomoxetine: atomoxetine,
+                    guanfacine: guanfacine
+                };
+                saveStateToLocalStorage();
+                updateCategorySharesSumCheck(); // 仅更新校验，不需要重新更新整个仪表盘
+            };
+
+            // 加载品类份额到UI
+            function loadCategorySharesToUI(year) {
+                const shares = yearSpecificCategoryShares[year] || defaultCategoryShares;
+                document.getElementById('input-share-stimulant').value = shares.stimulant;
+                document.getElementById('input-share-atomoxetine').value = shares.atomoxetine;
+                document.getElementById('input-share-guanfacine').value = shares.guanfacine;
+                updateCategorySharesSumCheck(); // 确保加载后也进行总和检查
+            }
+
+
+            // 生成 2023-2035 趋势数据
+            function generateTrendData() {
+                const years = [];
+                const revenues = [];
+
+                for (let y = 2023; y <= 2035; y++) {
+                    years.push(y);
+                    const data = calcYearData(y);
+                    revenues.push(data.revenue.toFixed(0));
+                }
+
+                return { years, revenues };
+            }
+
+            // 更新趋势图
+            function updateTrendChart() {
+                const { years, revenues } = generateTrendData();
+                const ctx = document.getElementById('trendChart').getContext('2d');
+
+                if (trendChart) trendChart.destroy();
+
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: years,
+                        datasets: [{
+                            label: '预估年度营收 (万元)',
+                            data: revenues,
+                            borderColor: '#ec4899', /* pink-500 */
+                            borderWidth: 4,
+                            backgroundColor: 'rgba(236, 72, 153, 0.1)', /* pink-500 with opacity */
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#ec4899',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { 
+                                display: true, 
+                                labels: { 
+                                    font: { size: 12, weight: 'bold' },
+                                    color: '#d1d5db' /* text-gray-300 */
+                                } 
+                            },
+                            tooltip: {
+                                backgroundColor: '#1f2937', /* gray-800 */
+                                padding: 12,
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 12 },
+                                bodyColor: '#d1d5db',
+                                titleColor: '#d1d5db'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(107, 114, 128, 0.3)' }, /* gray-500 with opacity */
+                                ticks: { 
+                                    font: { weight: 'bold' },
+                                    color: '#d1d5db' /* text-gray-300 */
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { 
+                                    font: { weight: 'bold' },
+                                    color: '#d1d5db' /* text-gray-300 */
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 重置参数
+            window.resetParams = function() {
+                // 清空所有年份的用户特定参数覆盖
+                yearSpecificParams = {};
+                yearSpecificCategoryShares = {};
+                editableContents = { ...initialEditableContents }; // 恢复到初始默认文本
+
+                // 清除 LocalStorage 中的所有相关数据
+                localStorage.removeItem(LS_KEY_PARAMS);
+                localStorage.removeItem(LS_KEY_CATEGORY_SHARES);
+                localStorage.removeItem(LS_KEY_EDITABLE_CONTENTS);
+
+                // 重置 params 为当前年份的默认趋势值 (并根据 initialParams 确保基准一致)
+                Object.assign(params, initialParams); // 从原始默认值开始
+
+                // 更新左侧参数面板的滑块和显示值
+                loadYearParamsToUI(currentYear);
+                loadEditableContentsToUI();
+                loadCategorySharesToUI(currentYear);
+
+                updateDisplay(); // 重新计算并显示所有数据
+                alert("所有参数已重置为默认值，并清除了保存的数据！");
+            };
+
+            // 仪表板初始化函数
+            function initializeDashboard() {
+                loadStateFromLocalStorage(); // 优先从 LocalStorage 加载状态
+
+                // 首次加载时，需要确保params对象有值，根据currentYear更新一次
+                // 如果localStorage没有覆盖currentYear，则params会保留initialParams的默认值
+                // 如果localStorage有覆盖，则会在loadYearParamsToUI中加载进来
+                loadYearParamsToUI(currentYear); 
+                loadEditableContentsToUI();
+                loadCategorySharesToUI(currentYear);
+                
+                switchYear(currentYear); // 初始化显示当前年份的数据
+            }
+        });
     </script>
 </body>
 </html>
