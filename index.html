@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>达因可乐定 2026 战略部署中心</title>
+    <!-- 核心库依赖 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; background: #fdf2f8; overflow: hidden; }
+        
+        /* 权限拦截层样式 */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 10000;
+            background: linear-gradient(135deg, #be185d 0%, #831843 100%);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s ease;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem; border-radius: 2rem; width: 90%; max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 侧边栏与主布局 */
+        .sidebar-active { background: #be185d !important; color: white !important; border-radius: 12px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        .pink-border { border: 1px solid #f472b6; }
+        .sub-tab-active { border-bottom: 3px solid #be185d; color: #be185d; font-weight: bold; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        textarea, input { transition: all 0.2s; border-radius: 4px; }
+        textarea:focus, input:focus { background-color: #fff1f2; outline: none; border-color: #be185d; }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <!-- 1. 权限拦截层 -->
+    <div id="login-overlay">
+        <div class="login-card text-center text-white">
+            <div class="mb-6 flex justify-center">
+                <div class="bg-white p-4 rounded-3xl shadow-inner text-pink-600">
+                    <i data-lucide="shield-check" class="w-12 h-12"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-black mb-1">战略部署中心</h1>
+            <p class="text-pink-200 text-[10px] mb-8 uppercase tracking-[0.2em]">Internal Strategic Tool</p>
+            <input type="password" id="access-pw" class="w-full bg-white/10 border border-white/20 rounded-xl py-4 px-6 text-white mb-4 text-center" placeholder="请输入授权密钥">
+            <button onclick="verify()" class="w-full bg-white text-pink-700 font-bold py-4 rounded-xl hover:bg-pink-50 transition active:scale-95">进入系统</button>
+            <p id="err" class="text-xs text-pink-300 mt-4 opacity-0">密钥错误，请重新输入</p>
+        </div>
+    </div>
+
+    <!-- 2. 主应用程序 -->
+    <div id="main-app" class="hidden flex w-full">
+        <!-- 左侧导航 -->
+        <nav class="w-72 bg-white border-r flex flex-col p-6 space-y-2 shadow-xl z-50">
+            <div class="mb-10 px-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center text-white italic font-black">D</div>
+                <span class="text-pink-600 font-black text-xl tracking-tighter">DAIN 2026</span>
+            </div>
+            <div class="space-y-1">
+                <button onclick="nav('summary')" id="btn-summary" class="w-full text-left px-4 py-3 flex items-center gap-3 text-slate-500 hover:bg-pink-50 sidebar-active transition">
+                    <i data-lucide="layout"></i> 1. 业务计划概要
+                </button>
+                <button onclick="nav('insights')" id="btn-insights" class="w-full text-left px-4 py-3 flex items-center gap-3 text-slate-500 hover:bg-pink-50 transition">
+                    <i data-lucide="lightbulb"></i> 2. 市场深度洞察
+                </button>
+                <button onclick="nav('patient')" id="btn-patient" class="w-full text-left px-4 py-3 flex items-center gap-3 text-slate-500 hover:bg-pink-50 transition font-bold text-pink-600">
+                    <i data-lucide="line-chart"></i> 3. 2035 销量预估
+                </button>
+            </div>
+            <div class="mt-auto p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p class="text-[10px] text-slate-400 font-bold uppercase mb-2 text-center tracking-widest">2026 营收目标</p>
+                <div id="side-revenue" class="text-2xl font-black text-pink-600 text-center italic">¥ 0</div>
+            </div>
+        </nav>
+
+        <!-- 内容窗口 -->
+        <main class="flex-1 overflow-y-auto p-10 bg-slate-50/50">
+            
+            <!-- 模块 1: 业务计划概要 -->
+            <section id="page-summary" class="tab-content active space-y-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-pink-600 text-3xl font-black italic tracking-tight">2026年业务计划概要</h2>
+                    <div class="flex gap-2">
+                        <button onclick="toggleEdit()" id="editBtn" class="bg-slate-800 text-white px-5 py-2 rounded-lg text-xs flex items-center gap-2"><i data-lucide="eye"></i> 预览模式</button>
+                        <button onclick="save()" class="bg-pink-600 text-white px-5 py-2 rounded-lg text-xs flex items-center gap-2 shadow-lg"><i data-lucide="save"></i> 保存计划</button>
+                    </div>
+                </div>
+                <div class="space-y-3 edit-container">
+                    <div class="flex items-stretch"><div class="w-24 flex items-center justify-center bg-pink-50 border-pink-200 border font-bold text-pink-600 text-sm">愿景</div><textarea id="v-vision" class="flex-1 p-4 text-sm pink-border outline-none resize-none" rows="2" placeholder="输入品牌长期愿景..."></textarea></div>
+                    <div class="flex items-stretch"><div class="w-24 flex items-center justify-center bg-pink-50 border-pink-200 border font-bold text-pink-600 text-sm">定位</div><textarea id="v-pos" class="flex-1 p-4 text-sm pink-border outline-none resize-none" rows="2" placeholder="输入产品定位..."></textarea></div>
+                    <div class="flex items-stretch bg-white"><div class="w-24 flex items-center justify-center bg-pink-600 text-white font-bold text-sm text-center px-2">2026目标</div>
+                        <div class="flex-1 pink-border p-6 flex items-center justify-center gap-4">
+                            <span class="text-pink-600 font-bold italic">年度销售预估金额：</span>
+                            <input type="number" id="v-target" oninput="updateSideKpi()" class="border-b-2 border-pink-200 text-center font-black text-3xl text-pink-600 w-48 outline-none" value="5000">
+                            <span class="text-pink-600 font-bold text-xl">万元</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mt-4">
+                        <div class="space-y-2"><div class="bg-pink-500 text-white text-center py-2 text-xs font-bold">策略 A</div><textarea id="v-stra-a" class="pink-border w-full h-24 p-3 text-xs" placeholder="方向..."></textarea></div>
+                        <div class="space-y-2"><div class="bg-pink-500 text-white text-center py-2 text-xs font-bold">策略 B</div><textarea id="v-stra-b" class="pink-border w-full h-24 p-3 text-xs" placeholder="方向..."></textarea></div>
+                        <div class="space-y-2"><div class="bg-pink-500 text-white text-center py-2 text-xs font-bold">策略 C</div><textarea id="v-stra-c" class="pink-border w-full h-24 p-3 text-xs" placeholder="方向..."></textarea></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="space-y-1"><p class="text-[10px] font-bold text-pink-400 uppercase">Key Actions</p><textarea id="v-act-a" class="pink-border w-full h-40 p-3 text-xs" placeholder="具体行动..."></textarea></div>
+                        <div class="space-y-1"><p class="text-[10px] font-bold text-pink-400 uppercase">Key Actions</p><textarea id="v-act-b" class="pink-border w-full h-40 p-3 text-xs" placeholder="具体行动..."></textarea></div>
+                        <div class="space-y-1"><p class="text-[10px] font-bold text-pink-400 uppercase">Key Actions</p><textarea id="v-act-c" class="pink-border w-full h-40 p-3 text-xs" placeholder="具体行动..."></textarea></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 模块 2: 市场深度洞察 (含SWOT) -->
+            <section id="page-insights" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="search"></i> 市场与竞品洞察看板</h2>
+                <div class="flex gap-8 border-b text-sm mb-6">
+                    <button onclick="subTab('sub-1')" id="btn-sub-1" class="sub-btn pb-3 sub-tab-active">人群画像</button>
+                    <button onclick="subTab('sub-2')" id="btn-sub-2" class="sub-btn pb-3 text-slate-400">竞品格局</button>
+                    <button onclick="subTab('sub-3')" id="btn-sub-3" class="sub-btn pb-3 text-slate-400">SWOT 矩阵</button>
+                </div>
+                <div id="sub-1" class="sub-pane space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-pink-600 mb-4 flex items-center gap-2"><i data-lucide="user-check"></i> 核心目标患者</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed italic">“6-17岁确诊ADHD患儿，特别伴随抽动症状（TD）的亚组人群；或因服用兴奋剂产生严重副作用的患者。”</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-indigo-600 mb-4 flex items-center gap-2"><i data-lucide="hospital"></i> 目标医院</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">全国 Top 200 三甲儿科医院、精神卫生中心。重点覆盖发育行为科、小儿神经内科。</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="sub-2" class="sub-pane hidden">
+                    <div class="bg-white rounded-2xl overflow-hidden border shadow-sm text-xs">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-800 text-white"><tr><th class="p-3">品类</th><th class="p-3">品牌</th><th class="p-3">达因机会</th></tr></thead>
+                            <tbody>
+                                <tr class="border-b"><td class="p-3 font-bold">中枢兴奋剂</td><td class="p-3">专注达/立优加</td><td class="p-3 italic text-pink-600">规避管制，解决失眠副作用</td></tr>
+                                <tr class="border-b"><td class="p-3 font-bold">托莫西汀</td><td class="p-3">择思达/集采品牌</td><td class="p-3 italic text-pink-600">强化合并TD的疗效优势</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="sub-3" class="sub-pane hidden grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100"><h5 class="font-bold text-emerald-700">优势 (S)</h5><p class="text-[10px] text-emerald-600">缓释剂型、依从性高、儿科背书</p></div>
+                    <div class="bg-red-50 p-6 rounded-2xl border border-red-100"><h5 class="font-bold text-red-700">挑战 (W)</h5><p class="text-[10px] text-red-600">作为二线用药的市场教育成本</p></div>
+                </div>
+            </section>
+
+            <!-- 模块 3: 销量预估模型 -->
+            <section id="page-patient" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="trending-up"></i> 2023-2035 销量演进模型</h2>
+                <div class="bg-indigo-950 p-8 rounded-[40px] text-white grid md:grid-cols-3 gap-8 shadow-2xl">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">城镇化率 (%)</label>
+                        <input type="range" id="p-urban" min="60" max="85" value="66" oninput="calc()" class="w-full accent-pink-500">
+                        <div id="l-urban" class="text-xs font-mono text-pink-400">66%</div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">达因峰值份额 (%)</label>
+                        <input type="range" id="p-share" min="5" max="40" value="12" oninput="calc()" class="w-full accent-pink-500">
+                        <div id="l-share" class="text-xs font-mono text-pink-400">12%</div>
+                    </div>
+                    <div class="bg-white/10 p-4 rounded-3xl flex flex-col justify-center text-center border border-white/10">
+                        <p class="text-[10px] font-bold text-pink-300 uppercase">2026 预估销售额</p>
+                        <p id="out-rev-2026" class="text-3xl font-black">¥ 0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border h-[450px]">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let myChart;
+
+        // 1. 登录验证
+        function verify() {
+            const pw = document.getElementById('access-pw').value;
+            if(pw === "Dain2026") {
+                document.getElementById('login-overlay').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('main-app').classList.remove('hidden');
+                    load();
+                    calc();
+                }, 500);
+            } else {
+                const e = document.getElementById('err');
+                e.classList.remove('opacity-0');
+                setTimeout(() => e.classList.add('opacity-0'), 2000);
+            }
+        }
+
+        // 2. 导航切换
+        function nav(id) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('sidebar-active'));
+            document.getElementById('page-' + id).classList.add('active');
+            document.getElementById('btn-' + id).classList.add('sidebar-active');
+        }
+
+        function subTab(id) {
+            document.querySelectorAll('.sub-pane').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.sub-btn').forEach(b => b.className = 'sub-btn pb-3 text-slate-400');
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById('btn-' + id).className = 'sub-btn pb-3 sub-tab-active';
+        }
+
+        // 3. 业务计划存储
+        function save() {
+            const f = ['vision','pos','target','stra-a','stra-b','stra-c','act-a','act-b','act-c'];
+            f.forEach(k => localStorage.setItem('dain_'+k, document.getElementById('v-'+k).value));
+            alert("保存成功！内容将保存在此浏览器中。");
+        }
+
+        function load() {
+            const f = ['vision','pos','target','stra-a','stra-b','stra-c','act-a','act-b','act-c'];
+            f.forEach(k => {
+                const v = localStorage.getItem('dain_'+k);
+                if(v) document.getElementById('v-'+k).value = v;
+            });
+            updateSideKpi();
+        }
+
+        function updateSideKpi() {
+            const v = document.getElementById('v-target').value;
+            document.getElementById('side-revenue').innerText = "¥ " + Number(v).toLocaleString();
+        }
+
+        // 4. 预览模式
+        let preview = false;
+        function toggleEdit() {
+            preview = !preview;
+            const el = document.querySelectorAll('.edit-container textarea, .edit-container input');
+            el.forEach(i => {
+                if(preview) { i.classList.add('border-transparent','bg-transparent'); i.readOnly = true; }
+                else { i.classList.remove('border-transparent','bg-transparent'); i.readOnly = false; }
+            });
+            document.getElementById('editBtn').innerHTML = preview ? '<i data-lucide="edit"></i> 编辑模式' : '<i data-lucide="eye"></i> 预览模式';
+            lucide.createIcons();
+        }
+
+        // 5. 销量模型逻辑
+        function calc() {
+            const urb = document.getElementById('p-urban').value / 100;
+            const shr = document.getElementById('p-share').value / 100;
+            document.getElementById('l-urban').innerText = (urb*100).toFixed(0) + "%";
+            document.getElementById('l-share').innerText = (shr*100).toFixed(0) + "%";
+
+            const yrs = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
+            const data = yrs.map(y => {
+                const pop = 17500 - (y-2023)*300; 
+                const treat = pop * urb * 0.062 * 0.15 * 0.40;
+                let s = 0.005;
+                if(y >= 2026) s = 0.01 + (shr - 0.01) * Math.min(1, (y-2026)/5);
+                const rev = (treat * 0.08 * s * 10 * 150).toFixed(0);
+                if(y === 2026) document.getElementById('out-rev-2026').innerText = "¥ " + rev + " 万";
+                return rev;
+            });
+            updateChart(yrs, data);
+        }
+
+        function updateChart(labs, data) {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labs,
+                    datasets: [{
+                        label: '销售额 (万元)',
+                        data: data,
+                        borderColor: '#db2777',
+                        borderWidth: 4,
+                        backgroundColor: 'rgba(219, 39, 119, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
