@@ -4,1192 +4,1730 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>达因可乐定 患者流演进看板</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>
+    <!-- SheetJS for Excel/CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700;900&display=swap');
-        body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background-color: #1a2035; /* 深色背景 */
-            color: #d1d5db; /* 默认文字颜色 text-gray-300 */
-            overflow: hidden; /* 防止滚动条出现，如果内容过多可以调整 */
-        }
-
-        /* 登录界面的特定样式 */
-        #login-container {
+        /* ============================================================= */
+        /*                          登录页面样式                           */
+        /* ============================================================= */
+        .login-body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #ec4899; /* 登陆背景色 */
-            background-image: linear-gradient(to bottom right, #ec4899, #8b5cf6); /* 渐变 */
+            background: linear-gradient(135deg, #FF6F61, #C70039); /* 暖粉色系渐变背景 */
+            color: #fff;
+            overflow: hidden; /* Prevent scrollbars if content slightly overflows */
         }
 
-        .login-card {
-            background-color: rgba(255, 255, 255, 0.15); /* 半透明白色背景 */
-            backdrop-filter: blur(10px); /* 毛玻璃效果 */
-            border-radius: 2rem; /* 大圆角 */
-            padding: 2.5rem; /* 增加内边距 */
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.1); /* 半透明背景 */
+            backdrop-filter: blur(10px); /* 玻璃模糊效果 */
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            border-radius: 20px; /* 圆角 */
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* 阴影 */
+            border: 1px solid rgba(255, 255, 255, 0.18); /* 边框 */
             text-align: center;
-            color: white; /* 确保文字是白色 */
-            border: 1px solid rgba(255, 255, 255, 0.2); /* 边框 */
+            width: 400px; /* 固定宽度 */
+            box-sizing: border-box; /* Include padding in width */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .login-icon {
-            background-color: white;
-            border-radius: 1.5rem; /* 大圆角 */
-            padding: 1.25rem;
-            display: inline-block;
-            margin-bottom: 2rem; /* 增加底部间距 */
+        .login-logo-wrapper {
+            background-color: #fff;
+            border-radius: 15px; /* 更大的圆角 */
+            width: 90px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .login-icon svg {
-            color: #ec4899; /* 和主色调一致 */
-            width: 3rem; /* 增大图标 */
-            height: 3rem;
+        .login-logo-icon {
+            color: #FF6F61; /* 图标颜色与背景色系一致 */
+            font-size: 50px;
         }
 
         .login-title {
-            font-size: 2.25rem; /* text-4xl */
-            font-weight: 900; /* font-black */
-            margin-bottom: 2.5rem; /* 增加底部间距 */
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .login-input {
-            background-color: rgba(255, 255, 255, 0.3); /* 半透明输入框 */
+        .login-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .login-password-input-wrapper {
+            width: 80%; /* 输入框宽度 */
+            margin-bottom: 40px;
+            background-color: rgba(255, 255, 255, 0.2); /* 输入框半透明背景 */
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2); /* 内阴影 */
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 8px; /* 模拟密码圆点间距 */
+        }
+
+        .login-password-input-wrapper input {
+            background: none;
             border: none;
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1rem 1.5rem; /* 增加内边距 */
-            color: white;
-            font-size: 1.125rem; /* text-lg */
-            margin-bottom: 1.5rem;
+            outline: none;
+            color: inherit;
+            font-size: inherit;
+            letter-spacing: inherit;
+            text-align: center;
             width: 100%;
+            caret-color: #FF6F61; /* 光标颜色 */
+            line-height: 1; /* Ensure single line height for dots */
+        }
+        /* Style for password dots (placeholder effect) */
+        .login-password-input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
         }
 
-        .login-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
 
         .login-button {
-            background-color: #ec4899; /* 按钮颜色 */
-            background-image: linear-gradient(to right, #ec4899, #f472b6); /* 按钮渐变 */
-            color: white;
-            font-weight: 700; /* font-bold */
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem; /* rounded-xl */
-            font-size: 1.25rem; /* text-xl */
-            width: 100%;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); /* 按钮阴影 */
+            width: 80%;
+            padding: 18px;
+            background-color: #fff;
+            color: #C70039; /* 按钮文字颜色与主色系一致 */
+            border: none;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .login-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+            background-color: #FF6F61; /* 鼠标悬停时按钮背景色 */
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* ============================================================= */
+        /*                          看板页面样式                           */
+        /* ============================================================= */
+        body {
+            /* 登录页面样式会覆盖此处的body样式，当isLoggedIn为true时，会应用下面的看板样式 */
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #1a1a2e; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            display: flex; /* Changed for flex control */
+            height: 100vh;
+            overflow: hidden;
+        }
+        #app.dashboard-layout { /* Applied when isLoggedIn is true */
+            display: flex;
+            flex-direction: column; /* Changed to column for header row */
+            width: 100%;
+            height: 100%;
         }
 
-        .error-message {
-            color: #fca5a5; /* red-300 */
-            margin-top: 1rem;
-            font-size: 0.875rem;
-            height: 1.25rem; /* 预留空间避免布局跳动 */
-        }
-
-
-        /* 以下是仪表板的样式，与之前相同 */
-
-        /* 顶部标题 */
-        .main-title {
-            @apply text-white;
-        }
-        .subtitle {
-            @apply text-gray-400;
-        }
-
-        /* 年份选择器 */
-        .year-btn {
-            @apply px-4 py-2 text-sm font-bold rounded-full transition cursor-pointer;
-            background-color: #3f4a6e; /* 按钮默认背景 */
-            color: #d1d5db; /* 按钮默认文字颜色 */
-            border: none;
-        }
-        .year-btn.active {
-            background-color: #ec4899; /* pink-500 */
-            color: white;
-            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5); /* 活性粉色发光 */
-        }
-        .year-btn:hover:not(.active) {
-            background-color: #4a557c; /* 稍亮一点的背景 */
-        }
-
-        /* 参数滑块样式 */
-        .param-slider {
-            @apply w-full h-2 rounded-lg appearance-none cursor-pointer;
-            background: linear-gradient(to right, #ec4899, #8b5cf6); /* 渐变色 */
-        }
-        .param-slider::-webkit-slider-thumb {
-            @apply appearance-none w-4 h-4 rounded-full shadow-lg;
-            background: white;
-            border: 2px solid #ec4899;
-        }
-        .param-slider::-moz-range-thumb {
-            @apply appearance-none w-4 h-4 rounded-full shadow-lg;
-            background: white;
-            border: 2px solid #ec4899;
-        }
-
-        /* 适用于 contenteditable 的样式，使其看起来像普通文本 */
-        .contenteditable-styled {
-            @apply p-0 border-none bg-transparent focus:outline-none focus:ring-0;
-            white-space: pre-wrap; /* 保留换行和空格 */
-            line-height: 1.5; /* 确保舒适的行高 */
-            min-height: 1em; /* 确保空时有高度 */
-            font-size: 0.875rem; /* 默认 text-sm */
-            color: #d1d5db; /* 默认文字颜色 */
-        }
-        /* 针对深色背景的可编辑内容 */
-        .contenteditable-dark {
-            @apply text-white;
-        }
-        /* PM洞察/策略贴士的字体更小 */
-        .contenteditable-xs {
-            font-size: 0.75rem; /* text-xs */
-        }
-
-        /* 可编辑数字输入框 */
-        .editable-input-number {
-            @apply w-20 p-1 text-base font-bold text-green-400 bg-gray-700 border border-gray-600 rounded-md text-center;
-        }
-
-        /* 品类份额的输入框 */
-        .category-share-input {
-            @apply w-16 p-1 text-sm font-bold text-gray-200 bg-gray-700 border border-gray-600 rounded-md text-center;
-        }
-
-        /* 统一的KPI/预测值显示样式 - 参照图片样式 */
-        .forecast-metric-container {
-            @apply flex flex-col items-center justify-center p-3 rounded-lg shadow-sm border border-gray-700; /* rounded-lg for more square corners */
-            background-color: #3f4a6e; /* 与年份按钮相似的背景 */
-        }
-        .forecast-metric-label {
-            @apply text-xs font-bold text-gray-400 uppercase mb-1; /* 字号缩小，加粗 */
-        }
-        /* 调整后的KPI值样式 */
-        .forecast-metric-value {
-            @apply text-2xl font-black; /* 更大更粗 */
-            color: #ec4899; /* 默认粉色，可根据具体KPI调整 */
-        }
-        /* 特殊颜色用于一些蓝色强调的KPIs */
-        .forecast-metric-value.blue {
-            color: #8b5cf6; /* 紫蓝色 */
-        }
-
-        .forecast-metric-unit {
-            @apply text-xs text-gray-500 mt-0;
-        }
-
-        /* 患者流模型中的进度条效果 */
-        .funnel-item {
-            @apply p-3 rounded-lg flex justify-between items-center;
-        }
-        .funnel-item-bg-1 { background-color: #3f4a6e; } /* 类似 KPI 容器背景 */
-        .funnel-item-bg-2 { background-color: #4a557c; } /* 稍深一点 */
-        .funnel-item-bg-3 { background-color: #55608a; } /* 更深 */
-        .funnel-item-bg-4 { background-color: #606b98; } /* 最深 */
-        .funnel-item-label { @apply text-sm font-bold text-gray-300; }
-        .funnel-item-value { @apply text-base font-bold text-white; }
-        .funnel-item-value.blue-highlight {
-            @apply text-lg font-black text-blue-300; /* 突出显示核心目标 */
-        }
-
-
-        /* 销售额大字显示 */
-        .current-revenue-display {
-            @apply text-pink-400; /* 粉色 */
-        }
-
-        /* Chart.js 图表样式覆盖 */
-        canvas {
-            background-color: transparent !important;
-        }
-        .chartjs-tooltip {
-            background-color: rgba(30, 41, 59, 0.9) !important; /* Tailwind gray-800 with opacity */
-            color: white !important;
-            border-radius: 0.75rem !important; /* rounded-xl */
-            padding: 12px !important;
-        }
-        .chartjs-tooltip-header-item, .chartjs-tooltip-body-item {
-            color: white !important;
-        }
-        .chartjs-tooltip-title {
-            font-size: 13px !important;
-            font-weight: bold !important;
-        }
-        .chartjs-tooltip-body {
-            font-size: 12px !important;
-        }
-
-        /* 品类份额排版优化 */
-        .category-share-row {
-            display: grid;
-            grid-template-columns: 1fr auto auto auto; /* 品类名 | 输入框 | % | 治疗线 */
+        #header-row {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem; /* 间距 */
-            font-size: 0.875rem; /* text-sm */
-            margin-bottom: 0.5rem;
+            background-color: #2a2a4a;
+            padding: 10px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid #3c3c5e;
         }
-        .category-share-row span:first-child {
-             text-align: left;
-        }
-        .category-share-row .share-input-group {
+
+        #header-title {
+            font-size: 24px;
+            color: #ffffff;
+            font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 0.25rem;
-            justify-self: end; /* 靠右对齐 */
         }
-        .category-share-row .share-input-group .category-share-input {
-            width: 4rem; /* 统一输入框宽度 */
+
+        #header-title span {
+            font-size: 14px;
+            color: #c0c0c0;
+            margin-left: 15px;
+            font-weight: normal;
         }
-        .category-share-row .share-unit {
-             font-weight: bold;
-             color: #d1d5db;
+
+        #year-selector {
+            display: flex;
+            gap: 5px;
         }
-        .category-share-row .treatment-line {
-            font-size: 0.75rem; /* text-xs */
-            color: #9ca3af; /* text-gray-400 */
+
+        .year-pill {
+            background-color: #3a3a5e;
+            color: #c0c0c0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, color 0.2s;
+            border: 1px solid #4a4a7a;
+        }
+
+        .year-pill.active {
+            background-color: #a0a0ff; /* Accent color */
+            color: #ffffff;
+            font-weight: bold;
+            border-color: #a0a0ff;
+        }
+
+        .year-pill:hover:not(.active) {
+            background-color: #4a4a7a;
+            color: #ffffff;
+        }
+
+        #content-wrapper {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #left-panel {
+            width: 380px;
+            background-color: #2a2a4a;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #3c3c5e;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: grid; /* Use grid for main content to arrange sections */
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            /* Adjusted grid-template-rows based on new layout */
+            grid-template-rows: auto auto auto auto; /* Removed row 5, adjusted */
+            gap: 20px;
+            box-sizing: border-box;
+            background-color: #1a1a2e; /* Match body background */
+        }
+        
+        /* Specific grid areas for content blocks */
+        /* row 1 */
+        .sales-summary-block { grid-column: 1 / 3; grid-row: 1; }
+        /* row 2 */
+        .sales-chart-container { grid-column: 1 / 3; grid-row: 2; }
+        /* row 3 */
+        .calculation-details-block { grid-column: 1 / 2; grid-row: 3; }
+        .competition-container { 
+            grid-column: 2 / 3; 
+            grid-row: 3 / 5; /* Spans 3rd and 4th row for competition and insight */
+            display: flex;
+            flex-direction: column;
+        }
+        /* row 4 */
+        .core-target-group { grid-column: 1 / 2; grid-row: 4; }
+        /* NEW: Right side insight block */
+        .right-side-insight-block { grid-column: 2 / 3; grid-row: 4; } /* Place this next to core-target-group */
+        /* Competitive suggestions now below core target group, spans both */
+        .competitive-suggestions { grid-column: 1 / 3; grid-row: 5; margin-top: 20px; }
+
+
+        h1 { /* This H1 is for the left panel, not the global header */
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #a0a0ff; /* Accent color for titles */
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .section-title i {
+            margin-right: 8px;
+            color: #a0a0ff;
+        }
+
+        .param-group {
+            background-color: #3a3a5e; /* Slightly lighter background for groups */
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4a4a7a;
+        }
+
+        .param-item {
+            margin-bottom: 10px;
+        }
+
+        .param-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #c0c0c0;
+        }
+
+        .param-item input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #2a2a4a; /* Input background */
+            color: #ffffff; /* Input text color */
+            outline: none; /* Remove default outline */
+        }
+        
+        button {
+            background-color: #6a6a9e; /* Default button color */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #8a8ac8;
+        }
+
+        /* Specific button for reset */
+        .param-group > button {
+            background-color: #e67e22; /* Orange for reset */
+        }
+        .param-group > button:hover {
+            background-color: #d35400;
+        }
+
+        /* Chart container styles */
+        .chart-container {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3c3c5e;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        .chart-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .current-year-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffcc00; /* Yellow accent */
+        }
+
+        /* Sales Summary Block (top right) */
+        .sales-summary-block {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid #3c3c5e;
+            display: flex;
+            flex-direction: column;
+        }
+        .sales-summary-block .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        .sales-summary-block h2 {
+            font-size: 20px;
+            color: #ffffff;
+            margin: 0;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .summary-item {
+            background-color: #3a3a5e;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #4a4a7a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .summary-item .label {
+            font-size: 13px;
+            color: #c0c0c0;
+            margin-bottom: 5px;
+        }
+        .summary-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #a0a0ff;
+        }
+        .summary-item .unit {
+            font-size: 14px;
+            color: #c0c0c0;
+            margin-left: 3px;
+        }
+        .current-year-sales-value-display {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffcc00;
+            padding: 15px;
+            background-color: #3a3a5e;
+            border-radius: 8px;
+            border: 1px solid #4a4a7a;
+        }
+        .current-year-sales-label {
+            text-align: center;
+            font-size: 14px;
+            color: #c0c0c0;
+            margin-top: 10px;
+        }
+
+
+        /* Calculation Details Block (测算逻辑明细) */
+        .calculation-details-block {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid #3c3c5e;
+            display: flex;
+            flex-direction: column;
+        }
+        .calculation-details-block .title {
+            font-size: 20px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 8px 0;
+            border-bottom: 1px dashed #444;
+            font-size: 14px;
+        }
+        .detail-item:last-of-type {
+            border-bottom: none;
+        }
+        .detail-item .label {
+            color: #c0c0c0;
+        }
+        .detail-item .value {
+            font-weight: bold;
+            color: #a0a0ff;
+            font-size: 16px;
+        }
+        .detail-item .value.highlight {
+            color: #ffcc00; /* Yellow highlight for key values */
+        }
+        .detail-item .unit {
+            font-size: 12px;
+            color: #c0c0c0;
+            margin-left: 5px;
+        }
+        .pm-strategy-tips {
+            margin-top: 20px;
+            background-color: #3a3a5e;
+            border-left: 5px solid #ffcc00; /* Yellow border for tips */
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .pm-strategy-tips h3 {
+            color: #ffcc00;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .pm-strategy-tips h3 i {
+            margin-right: 8px;
+        }
+        .pm-strategy-tips textarea {
+            width: calc(100% - 10px); /* Adjust for padding */
+            min-height: 60px;
+            padding: 5px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+            color: #ffffff;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+
+
+        /* Competition Shares Block */
+        .competition-container {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3c3c5e;
+        }
+
+        /* Competition Shares Input */
+        .competition-shares-inputs {
+        }
+        .competition-shares-inputs .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .competition-shares-inputs .input-group label {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #c0c0c0;
+        }
+        .competition-shares-inputs .input-group input {
+            width: 70px;
+            margin-left: 10px;
             text-align: right;
-            white-space: nowrap; /* 不换行 */
+            padding: 5px;
+            background-color: #2a2a4a;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            color: #ffffff;
+            outline: none;
         }
-        .category-share-row.clonidine { /* 可乐定行 */
-             font-weight: bold;
-             color: #34d399; /* text-emerald-400 */
+        .competition-shares-inputs .input-group .unit {
+            margin-left: 5px;
+            color: #c0c0c0;
+            font-size: 14px;
         }
-        .category-share-row.clonidine .treatment-line {
-            color: #d1d5db; /* 可乐定治疗线更亮 */
+        .competition-shares-inputs .input-group .type {
+             margin-left: 10px;
+             font-size: 12px;
+             color: #999;
         }
+        .competition-shares-inputs .total-share {
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: right;
+            color: #c0c0c0;
+        }
+        .competition-shares-inputs .total-share.invalid {
+            color: #e74c3c;
+        }
+
+        /* PM Insight moved here, before the competition chart */
+        .pm-insight-title { /* Style for PM insight title inside competition container */
+            font-size: 18px;
+            color: #a0a0ff;
+            margin-top: 20px; /* Adjusted margin to control spacing */
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+        .pm-insight-title i {
+            margin-right: 8px;
+            color: #a0a0ff;
+        }
+
+        .pm-insight-textarea {
+            width: calc(100% - 20px);
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+
+        /* Core Target Group */
+        .core-target-group {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid #3c3c5e;
+            display: flex;
+            flex-direction: column;
+        }
+        .core-target-group .chart-header h2 {
+            font-size: 20px;
+            color: #ffffff;
+            margin: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .core-target-group p {
+            font-size: 14px;
+            color: #c0c0c0;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        .core-target-group textarea { /* Added for editable description */
+            width: calc(100% - 20px);
+            min-height: 60px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+        .core-target-display {
+            margin-top: auto; /* Push to bottom */
+            background-color: #3a3a5e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #4a4a7a;
+        }
+        .core-target-display .label {
+            font-size: 14px;
+            color: #c0c0c0;
+            margin-bottom: 5px;
+        }
+        .core-target-display .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        .core-target-display .unit {
+            font-size: 16px;
+            color: #c0c0c0;
+            margin-left: 5px;
+        }
+
+        /* Competitive Suggestions (Editable) */
+        .competitive-suggestions {
+            background-color: #2a2a4a;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid #3c3c5e;
+            display: flex;
+            flex-direction: column;
+        }
+        .competitive-suggestions .chart-header h2 {
+            font-size: 20px;
+            color: #ffffff;
+            margin: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .competitive-suggestions textarea { /* Added for editable suggestions */
+            width: calc(100% - 20px);
+            flex-grow: 1; /* Allow to fill available height */
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+        /* New Right Side Insight Block specific styles */
+        .right-side-insight-block .chart-header h2 {
+            font-size: 20px;
+            color: #ffffff;
+            margin: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .right-side-insight-block textarea {
+            width: calc(100% - 20px);
+            flex-grow: 1;
+            min-height: 120px; /* Adjust as needed */
+            padding: 10px;
+            border: 1px solid #5a5a8e;
+            border-radius: 4px;
+            background-color: #2a2a4a;
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+
     </style>
 </head>
-<body class="p-6 flex flex-col h-screen">
-
-    <!-- 登录界面 -->
-    <div id="login-container">
-        <div class="login-card">
-            <div class="login-icon">
-                <!-- Lucide Icons 的 pulse 图标 -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pulse"><path d="M19 10c-1.3-3.9-4.8-6.4-8.8-7H3l2.7 5h4.1l.6 1.5 2.1 4.5H19l-2.1 4.5-.6 1.5H8.8L6.7 21H3l2.7-5h6.2c4 0 7.5-2.5 8.8-6.4V10z"></path></svg>
+<body :class="{'login-body': !isLoggedIn}">
+    <div id="app" :class="{'dashboard-layout': isLoggedIn}">
+        <!-- ============================================================= -->
+        <!--                         登录界面 (v-if)                       -->
+        <!-- ============================================================= -->
+        <div v-if="!isLoggedIn" class="login-container">
+            <div class="login-logo-wrapper">
+                <i class="fas fa-shield-alt login-logo-icon"></i>
             </div>
-            <h1 class="login-title">战略演进推演系统</h1>
-            <input type="password" id="password-input" class="login-input" placeholder="访问密钥">
-            <button id="login-button" class="login-button">验证进入</button>
-            <p id="error-message" class="error-message"></p>
+            <div class="login-title">数字化战略中心</div>
+            <div class="login-subtitle">达因可乐定患者流演进看板</div>
+            <div class="login-password-input-wrapper">
+                <input type="password" v-model="loginPassword" @keyup.enter="handleLogin" placeholder="·········">
+            </div>
+            <button class="login-button" @click="handleLogin">启动系统</button>
         </div>
+
+        <!-- ============================================================= -->
+        <!--                         看板界面 (v-else)                     -->
+        <!-- ============================================================= -->
+        <template v-else>
+            <!-- Header Row -->
+            <div id="header-row">
+                <div id="header-title">
+                    达因可乐定 患者流演进看板
+                    <span>中国儿童 ADHD 市场 | {{ startYear }}-{{ maxYear }} 动态预估 | 实时交互</span>
+                </div>
+                <div id="year-selector">
+                    <span v-for="year in years" :key="year"
+                          class="year-pill"
+                          :class="{ active: currentYear === year }"
+                          @click="currentYear = year">
+                        {{ year }}
+                    </span>
+                </div>
+            </div>
+
+            <div id="content-wrapper">
+                <div id="left-panel">
+                    <h1>预估参数</h1>
+
+                    <div class="param-group">
+                        <div class="section-title"><i class="fas fa-users"></i> 人口基础参数</div>
+                        <div class="param-item">
+                            <label>6-17岁总人口 (万人)</label>
+                            <input type="number" v-model.number="params.population6_17.value" @change="calculateAll">
+                        </div>
+                        <div class="param-item">
+                            <label>城镇化率 (%)</label>
+                            <input type="number" v-model.number="params.urbanizationRate.value" @change="calculateAll">
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="section-title"><i class="fas fa-stethoscope"></i> 患病及诊断参数</div>
+                        <div class="param-item">
+                            <label>患病率 (%)</label>
+                            <input type="number" v-model.number="params.prevalenceRate.value" @change="calculateAll">
+                        </div>
+                        <!-- 优化点1: 患病及诊断参数 就诊率、诊断率位置对调 -->
+                        <div class="param-item">
+                            <label>医院就诊率 (%)</label>
+                            <input type="number" v-model.number="params.hospitalVisitRate.value" @change="calculateAll">
+                        </div>
+                        <div class="param-item">
+                            <label>诊断率 (%)</label>
+                            <input type="number" v-model.number="params.diagnosisRate.value" @change="calculateAll">
+                        </div>
+                        <div class="param-item">
+                            <label>ADHD合并TD比例 (%)</label>
+                            <input type="number" v-model.number="params.adhdWithTDRatio.value" @change="calculateAll">
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="section-title"><i class="fas fa-pills"></i> 用药相关参数</div>
+                        <div class="param-item">
+                            <label>药物治疗比例 (%)</label>
+                            <input type="number" v-model.number="params.medicationTreatmentRate.value" @change="calculateAll">
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="section-title"><i class="fas fa-chart-pie"></i> 品类与品牌份额</div>
+                        <div class="param-item">
+                            <label>可乐定品类份额 (%)</label>
+                            <input type="number" v-model.number="params.clonidineCategoryShare.value" @change="calculateAll" id="clonidineCategoryShareInput">
+                        </div>
+                        <div class="param-item">
+                            <label>可乐定中达因份额 (%)</label>
+                            <input type="number" v-model.number="params.clonidineDyneShare.value" @change="calculateAll">
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="section-title"><i class="fas fa-money-check-alt"></i> 处方与复购</div>
+                        <div class="param-item">
+                            <label>单次处方片数</label>
+                            <input type="number" v-model.number="params.singlePrescriptionPills.value" @change="calculateAll">
+                        </div>
+                        <div class="param-item">
+                            <label>年度复购次数</label>
+                            <input type="number" v-model.number="params.annualRepurchaseTimes.value" @change="calculateAll">
+                        </div>
+                        <div class="param-item">
+                            <label>产品单价 (元/片)</label>
+                            <input type="number" v-model.number="params.productUnitPrice.value" @change="calculateAll">
+                        </div>
+
+                        <button @click="resetParams">重置参数</button>
+                    </div>
+
+                    <!-- Import Parameters Section -->
+                    <div class="param-group import-params-section">
+                        <div class="section-title"><i class="fas fa-file-upload"></i> 导入参数 (Excel/CSV)</div>
+                        <label for="paramFileUpload">选择文件</label>
+                        <input type="file" id="paramFileUpload" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" @change="handleFileUpload">
+                        <button @click="importParameters">导入参数</button>
+                    </div>
+                </div>
+
+                <div id="main-content">
+                    <!-- Sales Summary Block (top right) -->
+                    <div class="sales-summary-block">
+                        <div class="header">
+                            <h2>{{ startYear }}-{{ maxYear }} 销售预估</h2>
+                            <span class="current-year-display">当前年份: {{ currentYear }}</span>
+                        </div>
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="label">药物治疗比例</div>
+                                <div class="value">{{ params.medicationTreatmentRate.value }}<span class="unit">%</span></div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">可乐定品类份额</div>
+                                <div class="value">{{ params.clonidineCategoryShare.value }}<span class="unit">%</span></div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">达因可乐定份额</div>
+                                <div class="value">{{ params.clonidineDyneShare.value }}<span class="unit">%</span></div>
+                            </div>
+                        </div>
+                        <!-- 优化点3: 当前年份(2028)预测销售额放上单位：万元 -->
+                        <div class="current-year-sales-label">当前年份({{ currentYear }})预测销售额</div>
+                        <div class="current-year-sales-value-display">
+                            ¥{{ currentYearResults.estimatedSales | formatNumber(0) }} 万元
+                        </div>
+                    </div>
+
+                    <!-- Sales Chart (实时预估销售额曲线图) -->
+                    <div class="chart-container sales-chart-container">
+                        <div class="chart-header">
+                            <h2>{{ startYear }}-{{ maxYear }} 达因可乐定趋势外推 (全渠道)</h2>
+                        </div>
+                        <div id="salesChart" style="width: 100%; height: 350px;"></div>
+                    </div>
+
+                    <!-- Calculation Details Block (测算逻辑明细) -->
+                    <div class="calculation-details-block">
+                        <div class="title">测算逻辑明细 ({{ currentYear }})</div>
+                        <div class="detail-item">
+                            <span class="label">6-17岁城市患儿</span>
+                            <span class="value">{{ patientFlowDetails.urbanPopulation | formatNumber(0) }}<span class="unit">万</span></span>
+                        </div>
+                        <!-- 优化点2: 测算逻辑明细 (2026)下面的确诊患儿数、医院就诊患者数文字交换下位置 -->
+                        <div class="detail-item">
+                            <span class="label">医院就诊患者数</span>
+                            <span class="value">{{ patientFlowDetails.hospitalVisitedPatients | formatNumber(0) }}<span class="unit">万</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">确诊患儿数</span>
+                            <span class="value">{{ patientFlowDetails.diagnosedPatients | formatNumber(0) }}<span class="unit">万</span></span>
+                        </div>
+                        <!-- 优化点3: 测算逻辑明细 (2027)模块下的可乐定品类人群及达因覆盖人数单位用万，保留1位小数 -->
+                        <div class="detail-item">
+                            <span class="label">可乐定品类人群</span>
+                            <span class="value">{{ patientFlowDetails.clonidineCategoryPatients | formatNumber(1) }}<span class="unit">万</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">达因覆盖人数</span>
+                            <span class="value highlight">{{ (patientFlowDetails.dyneCoveredPatients / 10000) | formatNumber(1) }}<span class="unit">万</span></span>
+                        </div>
+                        <div class="pm-strategy-tips">
+                            <h3><i class="fas fa-lightbulb"></i> PM 策略贴士:</h3>
+                            <textarea v-model="pmStrategyTipsText"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Competition Analysis Block + PM Insight -->
+                    <div class="chart-container competition-container">
+                        <div class="chart-header">
+                            <h2>品类份额现状 ({{ currentYear }})</h2>
+                        </div>
+                        <div class="competition-shares-inputs">
+                            <div class="input-group">
+                                <label>{{ competitionShares.methylphenidate.label }}</label>
+                                <input type="number" step="0.1" v-model.number="competitionShares.methylphenidate.value" @change="adjustCompetitionShares" :id="'methylphenidateShareInput'">
+                                <span class="unit">%</span>
+                                <span class="type">{{ competitionShares.methylphenidate.type }}</span>
+                            </div>
+                            <div class="input-group">
+                                <label>{{ competitionShares.atomoxetine.label }}</label>
+                                <input type="number" step="0.1" v-model.number="competitionShares.atomoxetine.value" @change="adjustCompetitionShares" :id="'atomoxetineShareInput'">
+                                <span class="unit">%</span>
+                                <span class="type">{{ competitionShares.atomoxetine.type }}</span>
+                            </div>
+                            <div class="input-group">
+                                <label>{{ competitionShares.guanfacine.label }}</label>
+                                <input type="number" step="0.1" v-model.number="competitionShares.guanfacine.value" @change="adjustCompetitionShares" :id="'guanfacineShareInput'">
+                                <span class="unit">%</span>
+                                <span class="type">{{ competitionShares.guanfacine.type }}</span>
+                            </div>
+                            <div class="input-group">
+                                <label>{{ competitionShares.clonidine.label }}</label>
+                                <input type="number" step="0.1" v-model.number="params.clonidineCategoryShare.value" readonly style="cursor: not-allowed;" :id="'clonidineShareInput'">
+                                <span class="unit">%</span>
+                                <span class="type">{{ competitionShares.clonidine.type }}</span>
+                            </div>
+                            <div class="total-share">
+                                总份额: {{ totalCompetitionShare | formatNumber(1) }}%
+                            </div>
+                        </div>
+                        
+                        <!-- PM Insight moved here, before the competition chart -->
+                        <div class="pm-insight-title"><i class="fas fa-lightbulb"></i> PM 洞察</div>
+                        <textarea v-model="pmInsightText" class="pm-insight-textarea"></textarea>
+
+                        <!-- Pie Chart for Competition Shares -->
+                        <div id="competitionChart" style="width: 100%; height: 250px; margin-top: 15px;"></div>
+                    </div>
+
+                    <!-- Core Target Group -->
+                    <div class="chart-container core-target-group">
+                        <div class="chart-header">
+                            <h2>核心目标群: ADHD+TD</h2>
+                        </div>
+                        <!-- Editable description for ADHD+TD group -->
+                        <textarea v-model="adhdTdGroupDescription"></textarea>
+                        <div class="core-target-display">
+                            <div class="label">该亚组预估患者规模:</div>
+                            <div class="value">{{ patientFlowDetails.adhdWithTDGroup | formatNumber(1) }}<span class="unit">万</span></div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Right Side Insight Block (已移除“市场洞察”文字及文本框) -->
+                    <div class="chart-container right-side-insight-block">
+                        <!-- 市场洞察 文字及下面的文字、市场洞察的文本框已按要求去掉 -->
+                        <!-- 这个块现在是空的，因为它原始的 `chart-header` 和 `textarea` 已被移除。 -->
+                        <!-- 如果需要其他内容，请明确指出。 -->
+                    </div>
+
+
+                    <!-- Competitive Suggestions (Editable) -->
+                    <div class="chart-container competitive-suggestions">
+                        <div class="chart-header">
+                            <h2>竞争壁垒建议</h2>
+                        </div>
+                        <textarea v-model="competitiveSuggestionsText"></textarea>
+                    </div>
+
+                </div>
+            </div>
+        </template>
     </div>
 
-    <!-- 仪表板内容 (默认隐藏) -->
-    <div id="dashboard-container" class="hidden flex-1 overflow-y-auto flex flex-col">
-        <!-- 顶部标题 -->
-        <div class="mb-4">
-            <h1 class="text-4xl font-black main-title italic">达因可乐定 患者流演进看板</h1>
-            <p class="text-sm subtitle mt-1">中国儿童 ADHD 市场 | 2023-2035 动态预估 | 实时交互</p>
-        </div>
-
-        <!-- 年份选择器 -->
-        <div class="mb-6 flex gap-2 overflow-x-auto pb-2">
-            <button onclick="switchYear(2023)" class="year-btn" id="btn-2023">2023</button>
-            <button onclick="switchYear(2024)" class="year-btn" id="btn-2024">2024</button>
-            <button onclick="switchYear(2025)" class="year-btn" id="btn-2025">2025</button>
-            <button onclick="switchYear(2026)" class="year-btn active" id="btn-2026">2026</button>
-            <button onclick="switchYear(2027)" class="year-btn" id="btn-2027">2027</button>
-            <button onclick="switchYear(2028)" class="year-btn" id="btn-2028">2028</button>
-            <button onclick="switchYear(2029)" class="year-btn" id="btn-2029">2029</button>
-            <button onclick="switchYear(2030)" class="year-btn" id="btn-2030">2030</button>
-            <button onclick="switchYear(2031)" class="year-btn" id="btn-2031">2031</button>
-            <button onclick="switchYear(2032)" class="year-btn" id="btn-2032">2032</button>
-            <button onclick="switchYear(2033)" class="year-btn" id="btn-2033">2033</button>
-            <button onclick="switchYear(2034)" class="year-btn" id="btn-2034">2034</button>
-            <button onclick="switchYear(2035)" class="year-btn" id="btn-2035">2035</button>
-        </div>
-
-        <!-- 主容器 -->
-        <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <!-- 左侧：参数调整面板 -->
-            <div class="lg:col-span-1 space-y-4 flex-shrink-0">
-                <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700 sticky top-0">
-                    <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
-                        <i data-lucide="sliders"></i> 预估参数
-                    </h3>
-
-                    <!-- 人口基础参数 -->
-                    <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
-                        <p class="text-xs font-black text-blue-400 uppercase mb-2">👶 人口基础参数</p>
-
-                        <label class="block text-xs font-bold text-gray-300 mb-1">6-17岁总人口 (万人) <span class="text-gray-500" id="param-year-hint-total-pop"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-total-pop" min="1000" max="25000" value="2500" oninput="updateParams()" class="param-slider">
-                            <span id="v-total-pop" class="text-sm font-bold text-blue-400 w-12 text-right">2500</span>
-                        </div>
-
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">城镇化率 (%) <span class="text-gray-500" id="param-year-hint-urban"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-urban" min="50" max="85" value="66" oninput="updateParams()" class="param-slider">
-                            <span id="v-urban" class="text-sm font-bold text-blue-400 w-10 text-right">66%</span>
-                        </div>
-                    </div>
-
-                    <!-- 患病及诊断参数 -->
-                    <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
-                        <p class="text-xs font-black text-purple-400 uppercase mb-2">🔍 患病及诊断参数</p>
-
-                        <label class="block text-xs font-bold text-gray-300 mb-1">患病率 (%) <span class="text-gray-500" id="param-year-hint-prevalence"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-prevalence" min="3" max="10" value="6.2" step="0.1" oninput="updateParams()" class="param-slider">
-                            <span id="v-prevalence" class="text-sm font-bold text-purple-400 w-10 text-right">6.2%</span>
-                        </div>
-
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">诊断率 (%) <span class="text-gray-500" id="param-year-hint-diagnosis"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-diagnosis" min="5" max="40" value="15" oninput="updateParams()" class="param-slider">
-                            <span id="v-diagnosis" class="text-sm font-bold text-purple-400 w-10 text-right">15%</span>
-                        </div>
-
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">ADHD合并TD比例 (%) <span class="text-gray-500" id="param-year-hint-comorbid-td"></span></label>
-                        <div class="flex gap-2 items-center">
-                            <input type="range" id="p-comorbid-td" min="0" max="100" value="30" step="1" oninput="updateParams()" class="param-slider">
-                            <span id="v-comorbid-td" class="text-2xl font-black text-pink-400 w-16 text-right">30%</span>
-                        </div>
-                    </div>
-
-                    <!-- 用药相关参数 -->
-                    <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
-                        <p class="text-xs font-black text-green-400 uppercase mb-2">💊 用药相关参数</p>
-
-                        <label class="block text-xs font-bold text-gray-300 mb-1">药物治疗比例 (%) <span class="text-gray-500" id="param-year-hint-treatment"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-treatment" min="30" max="90" value="70" oninput="updateParams()" class="param-slider">
-                            <span id="v-treatment" class="text-sm font-bold text-green-400 w-10 text-right">70%</span>
-                        </div>
-                    </div>
-
-                    <!-- 品类与品牌份额 -->
-                    <div class="bg-gray-700 p-3 rounded-lg mb-4 border border-gray-600">
-                        <p class="text-xs font-black text-orange-400 uppercase mb-2">📊 品类与品牌份额</p>
-
-                        <label class="block text-xs font-bold text-gray-300 mb-1">可乐定品类份额 (%) <span class="text-gray-500" id="param-year-hint-category-share"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-category-share" min="3" max="20" value="5" oninput="updateParams()" class="param-slider">
-                            <span id="v-category-share" class="text-sm font-bold text-orange-400 w-10 text-right">5%</span>
-                        </div>
-
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">可乐定中达因份额 (%) <span class="text-gray-500" id="param-year-hint-brand-share"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-brand-share" min="20" max="80" value="40" oninput="updateParams()" class="param-slider">
-                            <span id="v-brand-share" class="text-sm font-bold text-orange-400 w-10 text-right">40%</span>
-                        </div>
-                    </div>
-
-                    <!-- 处方与复购 -->
-                    <div class="bg-gray-700 p-3 rounded-lg border border-gray-600">
-                        <p class="text-xs font-black text-pink-400 uppercase mb-2">🔄 处方与复购</p>
-
-                        <label class="block text-xs font-bold text-gray-300 mb-1">单次处方片数 <span class="text-gray-500" id="param-year-hint-prescription"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-prescription" min="14" max="90" value="30" oninput="updateParams()" class="param-slider">
-                            <span id="v-prescription" class="text-sm font-bold text-pink-400 w-12 text-right">30</span>
-                        </div>
-
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">年度复购次数 <span class="text-gray-500" id="param-year-hint-annual-count"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-annual-count" min="6" max="24" value="12" oninput="updateParams()" class="param-slider">
-                            <span id="v-annual-count" class="text-sm font-bold text-pink-400 w-10 text-right">12</span>
-                        </div>
-
-                        <!-- 新增产品单价 -->
-                        <label class="block text-xs font-bold text-gray-300 mt-3 mb-1">产品单价 (元/片) <span class="text-gray-500" id="param-year-hint-unit-price"></span></label>
-                        <div class="flex gap-2">
-                            <input type="range" id="p-unit-price" min="0.5" max="12" value="2" step="0.1" oninput="updateParams()" class="param-slider">
-                            <span id="v-unit-price" class="text-sm font-bold text-pink-400 w-10 text-right">2.0</span>
-                        </div>
-                    </div>
-
-                    <button onclick="resetParams()" class="w-full mt-4 bg-gray-700 text-gray-300 py-2 rounded-lg font-bold text-xs hover:bg-gray-600 transition">
-                        重置参数
-                    </button>
-                </div>
-            </div>
-
-            <!-- 右侧：数据看板 -->
-            <div class="lg:col-span-2 space-y-6">
-
-                <!-- 2023-2035 销售预估 (已移动到最上方) -->
-                <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700">
-                    <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
-                        <i data-lucide="trending-up"></i> 2023-2035 销售预估 (<span id="forecast-model-year">2026</span>)
-                    </h3>
-
-                    <!-- 顶部的预测参数和预测销售额 -->
-                    <div class="grid grid-cols-3 gap-4 mb-6 text-center">
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">药物治疗比例</p>
-                            <p class="forecast-metric-value" id="forecast-treatment-rate">70<span class="text-base">%</span></p>
-                        </div>
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">可乐定品类份额</p>
-                            <p class="forecast-metric-value" id="forecast-category-share">5<span class="text-base">%</span></p>
-                        </div>
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">达因可乐定份额</p>
-                            <p class="forecast-metric-value" id="forecast-brand-share">40<span class="text-base">%</span></p>
-                        </div>
-
-                        <!-- KPI 移动到这里，并采用统一格式 -->
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">预估患者数</p>
-                            <p class="forecast-metric-value" id="kpi-patients" style="color:#ec4899;"></p>
-                        </div>
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">预估销售额</p>
-                            <p class="forecast-metric-value blue" id="kpi-revenue"></p>
-                            <p class="forecast-metric-unit">万元</p>
-                        </div>
-                        <div class="forecast-metric-container">
-                            <p class="forecast-metric-label">人均年消费</p>
-                            <p class="forecast-metric-value blue" id="kpi-percapita"></p>
-                            <p class="forecast-metric-unit">元</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-900 text-white text-center p-4 rounded-xl mb-6">
-                        <p class="text-sm font-bold uppercase mb-1 text-gray-400">当前年份 (<span id="current-forecast-year">2035</span>) 预测销售额</p>
-                        <p class="text-5xl font-black current-revenue-display">¥<span id="current-forecast-revenue">0</span></p>
-                    </div>
-
-                    <!-- 趋势图 -->
-                    <h4 class="font-bold text-gray-200 mb-4 flex items-center gap-2">
-                        <i data-lucide="line-chart"></i> 2023-2035 达因可乐定趋势外推 (全渠道)
-                    </h4>
-                    <div class="h-64 mb-6">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-
-                    <!-- 测算逻辑明细 (2035) -->
-                    <h4 class="font-bold text-gray-200 mb-3 flex items-center gap-2">
-                        <i data-lucide="calculator"></i> 测算逻辑明细 (<span id="calc-logic-year">2035</span>)
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div><span class="text-gray-400">6-17岁城市患儿</span></div><div class="text-right font-bold text-pink-400" id="calc-urban-children">0万</div>
-                        <div><span class="text-gray-400">确诊患儿数</span></div><div class="text-right font-bold text-pink-400" id="calc-diagnosed-children">0万</div>
-                        <div><span class="text-gray-400">可乐定品类人群</span></div><div class="text-right font-bold text-pink-400" id="calc-category-patients">0万</div>
-                        <div><span class="text-gray-400">达因覆盖人数</span></div><div class="text-right font-bold text-pink-400" id="calc-dain-coverage">0人</div>
-                    </div>
-
-                    <div class="bg-gray-700 p-3 rounded-lg mt-4 border border-gray-600">
-                        <p class="text-xs font-bold text-blue-400 flex items-start gap-1">
-                            <i data-lucide="lightbulb" class="w-4 h-4"></i> PM 策略贴士:
-                        </p>
-                        <div id="editable-pm-strategy-tip" contenteditable="true" class="contenteditable-styled contenteditable-xs text-blue-300" placeholder="输入PM策略贴士..."></div>
-                    </div>
-                </div>
-
-                <!-- 核心目标群 与 竞争壁垒建议 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 核心目标群 卡片 -->
-                    <div class="bg-gray-800 p-4 rounded-[2rem] shadow-lg border border-gray-700 flex flex-col justify-between"> <!-- padding 调整为 p-4 -->
-                        <h3 class="text-lg font-bold text-pink-500 mb-2 flex items-center gap-2">
-                            <i data-lucide="target"></i> 核心目标群: ADHD+TD
-                        </h3>
-                        <div class="text-sm text-gray-300 mb-4">
-                            <div id="editable-target-group-text" contenteditable="true" class="contenteditable-styled" placeholder="输入核心目标群相关洞察..."></div>
-                        </div>
-                        <div class="bg-gray-700 p-3 rounded-lg border border-gray-600 text-center">
-                            <p class="text-xs font-bold text-green-400 uppercase">该亚组预估患者规模:</p>
-                            <div class="flex justify-center items-center gap-2 mt-1">
-                                <!-- 已改为自动计算显示 -->
-                                <span id="target-patient-group-size-display" class="text-3xl font-black text-pink-400">0.0</span>
-                                <span class="text-xl font-black text-pink-400">万</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 竞争壁垒建议 卡片 -->
-                    <div class="bg-gray-800 p-4 rounded-[2rem] shadow-lg border border-gray-700 text-white"> <!-- padding 调整为 p-4 -->
-                        <h3 class="text-lg font-bold text-blue-400 mb-4 flex items-center gap-2">
-                            <i data-lucide="shield-check"></i> 竞争壁垒建议
-                        </h3>
-                        <div id="editable-competition-text" contenteditable="true" class="contenteditable-styled contenteditable-dark text-gray-300" placeholder="输入竞争壁垒建议...">
-                            <ul>
-                                <li>强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。</li>
-                                <li>绑定“ADHD专家共识”,强化合并TD时的一线地位。</li>
-                                <li>差异化竞争:避开托莫西汀的集采红海。</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 患者流模型 (城镇化过滤) 与 品类份额现状 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 患者流模型 (城镇化过滤) 卡片 -->
-                    <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700">
-                        <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
-                            <i data-lucide="filter"></i> 患者流模型 (城镇化过滤) (<span id="funnel-year">2026</span>)
-                        </h3>
-                        <div class="space-y-3">
-                            <div class="funnel-item funnel-item-bg-1">
-                                <span class="funnel-item-label">6-17岁总人口</span>
-                                <span class="funnel-item-value" id="f-total-pop">0亿</span>
-                            </div>
-                            <div class="funnel-item funnel-item-bg-2">
-                                <span class="funnel-item-label">城镇化覆盖人群</span>
-                                <span class="funnel-item-value" id="f-urban-pop">0万</span>
-                            </div>
-                            <div class="funnel-item funnel-item-bg-3">
-                                <span class="funnel-item-label text-indigo-300">ADHD 患病群</span>
-                                <span class="funnel-item-value" id="f-adhd-patients">0万</span>
-                            </div>
-                            <div class="funnel-item funnel-item-bg-4">
-                                <span class="funnel-item-label text-emerald-300">核心目标: ADHD+TD 亚组</span>
-                                <span class="funnel-item-value blue-highlight" id="f-target-patients">0万</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 品类份额现状 (2025) 卡片 -->
-                    <div class="bg-gray-800 p-6 rounded-[2rem] shadow-lg border border-gray-700 flex flex-col justify-between">
-                        <h3 class="text-lg font-bold text-pink-500 mb-4 flex items-center gap-2">
-                            <i data-lucide="pie-chart"></i> 品类份额现状 (<span id="category-share-year">2025</span>)
-                        </h3>
-                        <div class="space-y-2 mb-4">
-                            <!-- 哌甲酯类 -->
-                            <div class="category-share-row">
-                                <span class="text-gray-300">哌甲酯类（兴奋剂）</span>
-                                <div class="share-input-group">
-                                    <input type="number" id="input-share-stimulant" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
-                                </div>
-                                <span class="share-unit">%</span>
-                                <span class="treatment-line">(一线)</span>
-                            </div>
-                            <!-- 托莫西汀 -->
-                            <div class="category-share-row">
-                                <span class="text-gray-300">托莫西汀（非兴奋剂）</span>
-                                <div class="share-input-group">
-                                    <input type="number" id="input-share-atomoxetine" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
-                                </div>
-                                <span class="share-unit">%</span>
-                                <span class="treatment-line">(一线)</span>
-                            </div>
-                             <!-- 胍法辛 -->
-                            <div class="category-share-row">
-                                <span class="text-gray-300">胍法辛（非兴奋剂）</span>
-                                <div class="share-input-group">
-                                    <input type="number" id="input-share-guanfacine" class="category-share-input" min="0" max="100" step="1" value="0" oninput="updateCategoryShares()">
-                                </div>
-                                <span class="share-unit">%</span>
-                                <span class="treatment-line">(ADHD二线、ADHD+TD一线)</span>
-                            </div>
-                            <!-- 可乐定类 -->
-                            <div class="category-share-row clonidine">
-                                <span>可乐定类（非兴奋剂）</span>
-                                <div class="share-input-group">
-                                    <span id="display-share-clonidine" class="text-base font-bold">0</span>
-                                </div>
-                                <span class="share-unit">%</span>
-                                <span class="treatment-line">(ADHD二线、ADHD+TD一线)</span>
-                            </div>
-                            <div class="text-red-400 text-xs mt-2 text-center" id="share-warning" style="display:none;">总份额不为100%！</div>
-                        </div>
-                        <div class="bg-gray-700 p-3 rounded-lg mt-4 border border-gray-600">
-                            <p class="text-xs font-bold text-blue-400 flex items-start gap-1">
-                                <i data-lucide="lightbulb" class="w-4 h-4"></i> PM 洞察:
-                            </p>
-                            <div id="editable-pm-insight-text" contenteditable="true" class="contenteditable-styled contenteditable-xs text-blue-300" placeholder="输入PM洞察..."></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const CORRECT_PASSWORD = "KLD2026";
-        const loginContainer = document.getElementById('login-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const passwordInput = document.getElementById('password-input');
-        const loginButton = document.getElementById('login-button');
-        const errorMessage = document.getElementById('error-message');
-
-        loginButton.addEventListener('click', attemptLogin);
-        passwordInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                attemptLogin();
-            }
-        });
-
-        function attemptLogin() {
-            const enteredPassword = passwordInput.value;
-            if (enteredPassword === CORRECT_PASSWORD) {
-                loginContainer.classList.add('hidden');
-                dashboardContainer.classList.remove('hidden');
-                lucide.createIcons(); // 初始化图标
-                initializeDashboard(); // 初始化仪表板
-            } else {
-                errorMessage.textContent = "密码错误，请重试。";
-                passwordInput.value = ''; // 清空密码输入框
-            }
-        }
-
-        // 默认显示登录界面，隐藏仪表板
-        loginContainer.classList.remove('hidden');
-        dashboardContainer.classList.add('hidden');
-
-
-        let currentYear = 2026;
-        let trendChart = null;
-
-        // 初始默认参数
-        const initialParams = {
-            totalPop: 2500,      // 6-17岁总人口(万人)
-            urban: 66,            // 城镇化率(%)
-            prevalence: 6.2,      // 患病率(%)
-            diagnosis: 15,        // 诊断率(%) (原医院就诊率)
-            comorbidTD: 30,       // ADHD合并TD比例(%) - 新增
-            treatment: 70,        // 药物治疗比例(%)
-            categoryShare: 5,     // 可乐定品类份额(%)
-            brandShare: 40,       // 达因品牌份额(%)
-            prescription: 30,     // 单次处方片数
-            annualCount: 12,       // 年度复购次数
-            unitPrice: 2.0         // 产品单价 (元/片)
-        };
-        let params = { ...initialParams }; // 当前参数，会根据年份和用户修改而变化
-
-        // 存储每个年份的参数覆盖或调整
-        let yearSpecificParams = {};
-
-        // 存储 contenteditable 文本的初始默认内容
-        const initialEditableContents = {
-            targetGroup: "针对这部分20%-50%的合并抽动障碍患者，达因可乐定具有绝对临床首选推荐地位。",
-            competition: `<ul>
-                <li>强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。</li>
-                <li>绑定“ADHD专家共识”,强化合并TD时的一线地位。</li>
-                <li>差异化竞争:避开托莫西汀的集采红海。</li>
-            </ul>`,
-            pmInsight: "2026达因上市需打破“二线治疗”标签,利用缓释片平稳性切入 ADHD+TD一线推荐。",
-            pmStrategy: "图表显示，如果诊断率在2030年能通过学术推广从15%提升至20%，达因的营收曲线将获得额外的35%增长空间。建议加大非专科医生的ADHD筛查培训。"
-        };
-        let editableContents = { ...initialEditableContents };
-
-        // 存储品类份额的独立编辑值
-        // 键是年份，值是一个对象 { stimulant: 45, atomoxetine: 35, guanfacine: 10 }
-        let yearSpecificCategoryShares = {};
-        // 默认值，当没有年份特定值时使用
-        const defaultCategoryShares = {
-            stimulant: 45,     // 默认哌甲酯类份额
-            atomoxetine: 35,   // 默认托莫西汀份额
-            guanfacine: 10     // 默认胍法辛份额 - 新增
-        };
-
-        // LocalStorage Keys
-        const LS_KEY_PARAMS = 'dainDashboard_yearSpecificParams';
-        const LS_KEY_CATEGORY_SHARES = 'dainDashboard_yearSpecificCategoryShares';
-        const LS_KEY_EDITABLE_CONTENTS = 'dainDashboard_editableContents';
-
-        // --- LocalStorage Helper Functions ---
-        function saveStateToLocalStorage() {
-            try {
-                localStorage.setItem(LS_KEY_PARAMS, JSON.stringify(yearSpecificParams));
-                localStorage.setItem(LS_KEY_CATEGORY_SHARES, JSON.stringify(yearSpecificCategoryShares));
-                localStorage.setItem(LS_KEY_EDITABLE_CONTENTS, JSON.stringify(editableContents));
-                // console.log("State saved to LocalStorage.");
-            } catch (e) {
-                console.error("Error saving to LocalStorage:", e);
-            }
-        }
-
-        function loadStateFromLocalStorage() {
-            try {
-                const savedParams = localStorage.getItem(LS_KEY_PARAMS);
-                if (savedParams) {
-                    yearSpecificParams = JSON.parse(savedParams);
-                    // console.log("yearSpecificParams loaded:", yearSpecificParams);
-                }
-
-                const savedCategoryShares = localStorage.getItem(LS_KEY_CATEGORY_SHARES);
-                if (savedCategoryShares) {
-                    yearSpecificCategoryShares = JSON.parse(savedCategoryShares);
-                    // console.log("yearSpecificCategoryShares loaded:", yearSpecificCategoryShares);
-                }
-
-                const savedEditableContents = localStorage.getItem(LS_KEY_EDITABLE_CONTENTS);
-                if (savedEditableContents) {
-                    editableContents = JSON.parse(savedEditableContents);
-                    // console.log("editableContents loaded:", editableContents);
-                }
-                // console.log("State loaded from LocalStorage.");
-            } catch (e) {
-                console.error("Error loading from LocalStorage, using defaults:", e);
-                // 如果加载失败，确保使用默认值
-                yearSpecificParams = {};
-                yearSpecificCategoryShares = {};
-                editableContents = { ...initialEditableContents };
-            }
-        }
-
-
-        // ====== 定义参数随年份演进的默认趋势 (重要！) ======
-        const getDefaultUrbanRate = (year) => {
-            if (year < 2023) return 65;
-            if (year > 2035) return 75;
-            return parseFloat((65 + (year - 2023) * ((75 - 65) / (2035 - 2023))).toFixed(1));
-        };
-
-        const getDefaultDiagnosisRate = (year) => { // 现在是“诊断率”
-            if (year < 2023) return 10;
-            if (year >= 2023 && year <= 2030) {
-                return parseFloat((10 + (year - 2023) * ((20 - 10) / (2030 - 2023))).toFixed(1));
-            }
-            return 20;
-        };
-
-        const getDefaultTotalPop = (year) => {
-            // 假设总人口从2023年2500万，每年递减50万
-            if (year < 2023) return 2500;
-            // 允许最大值达到25000，但默认趋势还是基于2500
-            const initialPopVal = 2500; // 假设2023年的初始值
-            const decreaseRate = 50; // 每年递减50万人
-            const calculatedPop = initialPopVal - (year - 2023) * decreaseRate;
-            return Math.max(1000, calculatedPop); // 确保不低于某个合理值
-        };
-
-        // 其他参数的默认趋势函数，如果不需要年份趋势，则直接从params当前值取
-        const getDefaultPrevalence = (year) => params.prevalence;
-        const getDefaultComorbidTD = (year) => params.comorbidTD; // 新增
-        const getDefaultTreatment = (year) => params.treatment;
-        // 对于categoryShare和brandShare，它们在params对象中，但我们还需要考虑用户在左侧滑块的调整，所以这里直接从params取
-        const getDefaultCategoryShare = (year) => params.categoryShare;
-        const getDefaultBrandShare = (year) => params.brandShare;
-        const getDefaultPrescription = (year) => params.prescription;
-        const getDefaultAnnualCount = (year) => params.annualCount;
-        const getDefaultUnitPrice = (year) => params.unitPrice;
-
-
-        // 年份切换函数
-        window.switchYear = function(year) {
-            currentYear = year;
-            document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-${year}`).classList.add('active');
-
-            loadYearParamsToUI(currentYear); // 将当前年份或用户覆盖的参数加载到UI
-            loadEditableContentsToUI(); // 加载可编辑内容
-            loadCategorySharesToUI(currentYear); // 加载品类份额的编辑值
-            updateDisplay(); // 重新计算并显示所有数据
-        };
-
-        // 将指定年份的参数加载到UI调整面板
-        function loadYearParamsToUI(year) {
-            // 获取该年份的基准参数值（默认趋势 + params中的当前值，如果未被yearSpecificParams覆盖）
-            let currentYearBaseParams = {
-                totalPop: getDefaultTotalPop(year),
-                urban: getDefaultUrbanRate(year),
-                prevalence: params.prevalence, // 从当前params中取，以便用户滑动后保留
-                diagnosis: getDefaultDiagnosisRate(year),
-                comorbidTD: params.comorbidTD,
-                treatment: params.treatment,
-                categoryShare: params.categoryShare,
-                brandShare: params.brandShare,
-                prescription: params.prescription,
-                annualCount: params.annualCount,
-                unitPrice: params.unitPrice
-            };
-
-            // 如果有年份特定参数覆盖，则应用这些覆盖
-            if (yearSpecificParams[year]) {
-                Object.assign(currentYearBaseParams, yearSpecificParams[year]);
-            }
-            
-            // 将最终参数设置到params对象，以便updateDisplay使用
-            Object.assign(params, currentYearBaseParams);
-
-            document.getElementById('p-total-pop').value = params.totalPop;
-            document.getElementById('v-total-pop').textContent = params.totalPop.toLocaleString();
-
-            document.getElementById('p-urban').value = params.urban.toFixed(0);
-            document.getElementById('v-urban').textContent = params.urban.toFixed(0) + '%';
-
-            document.getElementById('p-prevalence').value = params.prevalence.toFixed(1);
-            document.getElementById('v-prevalence').textContent = params.prevalence.toFixed(1) + '%';
-
-            document.getElementById('p-diagnosis').value = params.diagnosis.toFixed(0);
-            document.getElementById('v-diagnosis').textContent = params.diagnosis.toFixed(0) + '%';
-            
-            document.getElementById('p-comorbid-td').value = params.comorbidTD.toFixed(0);
-            document.getElementById('v-comorbid-td').textContent = params.comorbidTD.toFixed(0) + '%';
-
-            document.getElementById('p-treatment').value = params.treatment.toFixed(0);
-            document.getElementById('v-treatment').textContent = params.treatment.toFixed(0) + '%';
-
-            document.getElementById('p-category-share').value = params.categoryShare.toFixed(0);
-            document.getElementById('v-category-share').textContent = params.categoryShare.toFixed(0) + '%';
-
-            document.getElementById('p-brand-share').value = params.brandShare.toFixed(0);
-            document.getElementById('v-brand-share').textContent = params.brandShare.toFixed(0) + '%';
-
-            document.getElementById('p-prescription').value = params.prescription.toFixed(0);
-            document.getElementById('v-prescription').textContent = params.prescription;
-
-            document.getElementById('p-annual-count').value = params.annualCount.toFixed(0);
-            document.getElementById('v-annual-count').textContent = params.annualCount.toFixed(0);
-
-            document.getElementById('p-unit-price').value = params.unitPrice.toFixed(1);
-            document.getElementById('v-unit-price').textContent = params.unitPrice.toFixed(1);
-
-            document.querySelectorAll('[id^="param-year-hint"]').forEach(hint => {
-                hint.textContent = `(当前: ${year}年)`;
-            });
-        }
-
-        // 参数更新函数 (用户滑动滑块时调用)
-        window.updateParams = function() {
-            // 读取UI上的值更新params
-            params.totalPop = parseInt(document.getElementById('p-total-pop').value);
-            params.urban = parseInt(document.getElementById('p-urban').value);
-            params.prevalence = parseFloat(document.getElementById('p-prevalence').value);
-            params.diagnosis = parseInt(document.getElementById('p-diagnosis').value);
-            params.comorbidTD = parseInt(document.getElementById('p-comorbid-td').value);
-            params.treatment = parseInt(document.getElementById('p-treatment').value);
-            params.categoryShare = parseInt(document.getElementById('p-category-share').value);
-            params.brandShare = parseInt(document.getElementById('p-brand-share').value);
-            params.prescription = parseInt(document.getElementById('p-prescription').value);
-            params.annualCount = parseInt(document.getElementById('p-annual-count').value);
-            params.unitPrice = parseFloat(document.getElementById('p-unit-price').value);
-
-            // 更新UI显示
-            document.getElementById('v-total-pop').textContent = params.totalPop.toLocaleString();
-            document.getElementById('v-urban').textContent = params.urban + '%';
-            document.getElementById('v-prevalence').textContent = params.prevalence.toFixed(1) + '%';
-            document.getElementById('v-diagnosis').textContent = params.diagnosis + '%';
-            document.getElementById('v-comorbid-td').textContent = params.comorbidTD + '%';
-            document.getElementById('v-treatment').textContent = params.treatment + '%';
-            document.getElementById('v-category-share').textContent = params.categoryShare + '%';
-            document.getElementById('v-brand-share').textContent = params.brandShare + '%';
-            document.getElementById('v-prescription').textContent = params.prescription;
-            document.getElementById('v-annual-count').textContent = params.annualCount;
-            document.getElementById('v-unit-price').textContent = params.unitPrice.toFixed(1);
-
-            // 保存当前年份的参数到 yearSpecificParams，以便LocalStorage保存
-            yearSpecificParams[currentYear] = { ...params };
-            saveStateToLocalStorage();
-            updateDisplay();
-        };
-
-
-        // 计算当年数据，返回一个数据对象
-        function calcYearData(year) {
-            // 先获取该年份的“基准”参数值 (来自默认趋势或用户覆盖)
-            let effectiveParams = {
-                totalPop: getDefaultTotalPop(year),
-                urban: getDefaultUrbanRate(year),
-                prevalence: getDefaultPrevalence(year),
-                diagnosis: getDefaultDiagnosisRate(year),
-                comorbidTD: getDefaultComorbidTD(year),
-                treatment: getDefaultTreatment(year),
-                categoryShare: getDefaultCategoryShare(year),
-                brandShare: getDefaultBrandShare(year),
-                prescription: getDefaultPrescription(year),
-                annualCount: getDefaultAnnualCount(year),
-                unitPrice: getDefaultUnitPrice(year)
-            };
-
-            // 如果有yearSpecificParams[year]的覆盖，应用它
-            if (yearSpecificParams[year]) {
-                Object.assign(effectiveParams, yearSpecificParams[year]);
-            } else {
-                // 如果没有yearSpecificParams，但params有值，确保使用params的当前值
-                Object.assign(effectiveParams, params);
-            }
-
-
-            const urbanPop = effectiveParams.totalPop * (effectiveParams.urban / 100);
-            const adhd = urbanPop * (effectiveParams.prevalence / 100);
-            const diagnosed = adhd * (effectiveParams.diagnosis / 100);
-
-            // 核心目标群患者规模 - 使用新增的ADHD合并TD比例参数
-            const calculatedTargetGroupSize = diagnosed * (effectiveParams.comorbidTD / 100);
-
-            const treated = diagnosed * (effectiveParams.treatment / 100);
-            const category = treated * (effectiveParams.categoryShare / 100);
-            const dain = category * (effectiveParams.brandShare / 100);
-
-            const totalPieces = effectiveParams.prescription * effectiveParams.annualCount;
-            const revenue = (dain * 10000) * totalPieces * effectiveParams.unitPrice / 10000; // 使用 effectiveParams.unitPrice
-
-            return {
-                totalPop: effectiveParams.totalPop,
-                urbanPop: urbanPop,
-                adhdPatients: adhd,
-                diagnosedPatients: diagnosed,
-                calculatedTargetGroupSize: calculatedTargetGroupSize,
-                treatedPatients: treated,
-                categoryPatients: category,
-                dainPatients: dain,
-                revenue: revenue,
-                perCapita: dain > 0 ? (revenue * 10000) / (dain * 10000) : 0,
-                // 将计算用的effectiveParams也返回，方便显示
-                usedParams: effectiveParams
-            };
-        }
-
-        // 更新显示函数
-        function updateDisplay() {
-            const data = calcYearData(currentYear);
-            const usedParams = data.usedParams; // 获取计算时实际使用的参数
-
-            // 1. 核心目标群: ADHD+TD
-            const currentTargetGroupSize = (data.calculatedTargetGroupSize).toFixed(1);
-            document.getElementById('target-patient-group-size-display').textContent = currentTargetGroupSize;
-            // document.getElementById('editable-target-group-text').innerHTML 已经在 loadEditableContentsToUI 中处理
-
-            // 2. 竞争壁垒建议 - 已经在 loadEditableContentsToUI 中处理
-            // document.getElementById('editable-competition-text').innerHTML = editableContents.competition;
-
-            // 3. 患者流模型 (城镇化过滤)
-            document.getElementById('funnel-year').textContent = currentYear;
-            document.getElementById('f-total-pop').textContent = `${(data.totalPop / 1000).toFixed(1)}亿`;
-            document.getElementById('f-urban-pop').textContent = `${data.urbanPop.toFixed(0)}万`;
-            document.getElementById('f-adhd-patients').textContent = `${data.adhdPatients.toFixed(0)}万`;
-            document.getElementById('f-target-patients').textContent = `${currentTargetGroupSize}万`;
-
-
-            // 4. 品类份额现状
-            document.getElementById('category-share-year').textContent = currentYear;
-            // 品类份额输入框的值在 loadCategorySharesToUI 中加载
-            document.getElementById('display-share-clonidine').textContent = usedParams.categoryShare.toFixed(0);
-            // editable-pm-insight-text 已经在 loadEditableContentsToUI 中处理
-            
-            updateCategorySharesSumCheck(); // 确保总和检查器也更新
-
-            // 5. 销售预估
-            document.getElementById('forecast-model-year').textContent = currentYear;
-            document.getElementById('forecast-treatment-rate').innerHTML = `${usedParams.treatment.toFixed(0)}<span class="text-base">%</span>`;
-            document.getElementById('forecast-category-share').innerHTML = `${usedParams.categoryShare.toFixed(0)}<span class="text-base">%</span>`;
-            document.getElementById('forecast-brand-share').innerHTML = `${usedParams.brandShare.toFixed(0)}<span class="text-base">%</span>`;
-
-            document.getElementById('current-forecast-year').textContent = currentYear;
-            document.getElementById('current-forecast-revenue').textContent = data.revenue.toFixed(0);
-
-            // KPI 样式更新和值
-            document.getElementById('kpi-patients').textContent = (data.dainPatients * 10000).toLocaleString('zh-CN', {maximumFractionDigits: 0});
-            document.getElementById('kpi-revenue').textContent = '¥ ' + data.revenue.toFixed(0);
-            document.getElementById('kpi-percapita').textContent = '¥ ' + data.perCapita.toFixed(0);
-
-
-            // 测算逻辑明细
-            document.getElementById('calc-logic-year').textContent = currentYear;
-            document.getElementById('calc-urban-children').textContent = (data.urbanPop).toFixed(0) + '万';
-            document.getElementById('calc-diagnosed-children').textContent = (data.diagnosedPatients).toFixed(0) + '万';
-            document.getElementById('calc-category-patients').textContent = (data.categoryPatients).toFixed(1) + '万';
-            document.getElementById('calc-dain-coverage').textContent = (data.dainPatients * 10000).toLocaleString('zh-CN', {maximumFractionDigits: 0}) + '人';
-
-            // 6. PM 策略贴士 - 已经在 loadEditableContentsToUI 中处理
-            // document.getElementById('editable-pm-strategy-tip').innerHTML = editableContents.pmStrategy;
-
-            updateTrendChart();
-        }
-
-        // ====== contenteditable 文本和可编辑数字的辅助函数 ======
-
-        // 保存 contenteditable 文本内容
-        function saveEditableContent(id, key) {
-            editableContents[key] = document.getElementById(id).innerHTML;
-            saveStateToLocalStorage();
-        }
-
-        // 加载 contenteditable 文本内容到UI
-        function loadEditableContentsToUI() {
-            document.getElementById('editable-target-group-text').innerHTML = editableContents.targetGroup;
-            document.getElementById('editable-competition-text').innerHTML = editableContents.competition;
-            document.getElementById('editable-pm-insight-text').innerHTML = editableContents.pmInsight;
-            document.getElementById('editable-pm-strategy-tip').innerHTML = editableContents.pmStrategy;
-        }
-
-        // 监听 contenteditable 区域的输入事件
-        document.getElementById('editable-target-group-text').addEventListener('input', () => saveEditableContent('editable-target-group-text', 'targetGroup'));
-        document.getElementById('editable-competition-text').addEventListener('input', () => saveEditableContent('editable-competition-text', 'competition'));
-        document.getElementById('editable-pm-insight-text').addEventListener('input', () => saveEditableContent('editable-pm-insight-text', 'pmInsight'));
-        document.getElementById('editable-pm-strategy-tip').addEventListener('input', () => saveEditableContent('editable-pm-strategy-tip', 'pmStrategy'));
-
-
-        // 更新品类份额的总和校验
-        function updateCategorySharesSumCheck() {
-            const stimulant = parseFloat(document.getElementById('input-share-stimulant').value) || 0;
-            const atomoxetine = parseFloat(document.getElementById('input-share-atomoxetine').value) || 0;
-            const guanfacine = parseFloat(document.getElementById('input-share-guanfacine').value) || 0;
-            const clonidine = parseFloat(params.categoryShare) || 0; // 可乐定份额来自左侧参数
-
-            const total = stimulant + atomoxetine + guanfacine + clonidine;
-
-            const warningDiv = document.getElementById('share-warning');
-
-            if (Math.abs(total - 100) > 0.01) { // 允许浮点数误差
-                warningDiv.style.display = 'block';
-            } else {
-                warningDiv.style.display = 'none';
-            }
-        }
-
-        // 更新品类份额 (用户在输入框中修改时调用)
-        window.updateCategoryShares = function() {
-            const stimulant = parseFloat(document.getElementById('input-share-stimulant').value) || 0;
-            const atomoxetine = parseFloat(document.getElementById('input-share-atomoxetine').value) || 0;
-            const guanfacine = parseFloat(document.getElementById('input-share-guanfacine').value) || 0;
-
-            // 保存用户调整的品类份额到 yearSpecificCategoryShares
-            yearSpecificCategoryShares[currentYear] = {
-                stimulant: stimulant,
-                atomoxetine: atomoxetine,
-                guanfacine: guanfacine
-            };
-            saveStateToLocalStorage();
-            updateCategorySharesSumCheck(); // 仅更新校验，不需要重新更新整个仪表盘
-        };
-
-        // 加载品类份额到UI
-        function loadCategorySharesToUI(year) {
-            const shares = yearSpecificCategoryShares[year] || defaultCategoryShares;
-            document.getElementById('input-share-stimulant').value = shares.stimulant;
-            document.getElementById('input-share-atomoxetine').value = shares.atomoxetine;
-            document.getElementById('input-share-guanfacine').value = shares.guanfacine;
-            updateCategorySharesSumCheck(); // 确保加载后也进行总和检查
-        }
-
-
-        // 生成 2023-2035 趋势数据
-        function generateTrendData() {
-            const years = [];
-            const revenues = [];
-
-            for (let y = 2023; y <= 2035; y++) {
-                years.push(y);
-                const data = calcYearData(y);
-                revenues.push(data.revenue.toFixed(0));
-            }
-
-            return { years, revenues };
-        }
-
-        // 更新趋势图
-        function updateTrendChart() {
-            const { years, revenues } = generateTrendData();
-            const ctx = document.getElementById('trendChart').getContext('2d');
-
-            if (trendChart) trendChart.destroy();
-
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [{
-                        label: '预估年度营收 (万元)',
-                        data: revenues,
-                        borderColor: '#ec4899', /* pink-500 */
-                        borderWidth: 4,
-                        backgroundColor: 'rgba(236, 72, 153, 0.1)', /* pink-500 with opacity */
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#ec4899',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 7
-                    }]
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                isLoggedIn: false, // 控制登录状态，默认为未登录
+                loginPassword: '', // 绑定登录密码输入框
+
+                currentYear: 2026, // 将当前年份调整为2026，以便和你的描述一致
+                startYear: 2023,
+                maxYear: 2030,
+                years: Array.from({ length: 8 }, (v, i) => 2023 + i),
+                params: {
+                    population6_17: { value: 1.52 * 10000, min: 1000, max: 3000, unit: '万人' },
+                    urbanizationRate: { value: 66, min: 0, max: 100, unit: '%' },
+                    prevalenceRate: { value: 6.2, min: 0, max: 100, unit: '%' },
+                    diagnosisRate: { value: 15, min: 0, max: 100, unit: '%' },
+                    hospitalVisitRate: { value: 80, min: 0, max: 100, unit: '%' },
+                    adhdWithTDRatio: { value: 30, min: 0, max: 100, unit: '%' },
+                    medicationTreatmentRate: { value: 70, min: 0, max: 100, unit: '%' },
+                    clonidineCategoryShare: { value: 5, min: 0, max: 100, unit: '%' },
+                    clonidineDyneShare: { value: 40, min: 0, max: 100, unit: '%' },
+                    singlePrescriptionPills: { value: 30, min: 1, max: 365, unit: '片' },
+                    annualRepurchaseTimes: { value: 12, min: 1, max: 20, unit: '次' },
+                    productUnitPrice: { value: 2.0, min: 0.1, max: 100, unit: '元/片' },
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { 
-                            display: true, 
-                            labels: { 
-                                font: { size: 12, weight: 'bold' },
-                                color: '#d1d5db' /* text-gray-300 */
-                            } 
-                        },
-                        tooltip: {
-                            backgroundColor: '#1f2937', /* gray-800 */
-                            padding: 12,
-                            titleFont: { size: 13 },
-                            bodyFont: { size: 12 },
-                            bodyColor: '#d1d5db',
-                            titleColor: '#d1d5db'
+                paramValues: {}, // Stores parameter values for each year
+                competitionShares: {
+                    methylphenidate: { label: '哌甲酯类（兴奋剂）', value: 40, type: '(一线)' },
+                    atomoxetine: { label: '托莫西汀（非兴奋剂）', value: 30, type: '(一线)' },
+                    guanfacine: { label: '胍法辛（非兴奋剂）', value: 20, type: '(ADHD二线、ADHD+TD一线)' },
+                    clonidine: { label: '可乐定类（非兴奋剂）', value: 5, type: '(ADHD二线、ADHD+TD一线)', fixed: true },
+                },
+                salesChart: null,
+                competitionChart: null,
+                results: {}, // Stores calculated results for all years
+                selectedFile: null, // To store the file selected by the user
+                pmInsightText: '2026达因上市需打破“二线治疗”标签,利用缓释片平稳性切入ADHD+TD一线推荐。\n\n目前品类份额中，兴奋剂和托莫西汀占据主导地位，达因需在细分市场（如ADHD+TD）寻求突破。',
+                pmStrategyTipsText: '图表显示，如果诊断率在2030年能通过学术推广从15%提升至20%，达因的营收曲线将获得额外的35%增长空间。建议加大非专科医生的ADHD筛查培训。',
+                adhdTdGroupDescription: '针对这部分20%-50%的合并抽动障碍患者，达因可乐定具有绝对临床首选推荐地位。该亚组是达因的核心目标市场。',
+                competitiveSuggestionsText: '强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。\n绑定“ADHD专家共识”,强化合并TD时的一线地位。\n差异化竞争:避开托莫西汀的集采红海。\n加强市场教育，提升产品在非兴奋剂市场的认知度。',
+                rightSideInsightText: '', // New data property for the right side insight text area
+            },
+            filters: {
+                formatNumber(value, decimalPlaces = 0) {
+                    if (value === null || value === undefined || isNaN(value)) return '-';
+                    const num = parseFloat(value);
+                    if (decimalPlaces === 0) {
+                        return Math.round(num).toLocaleString('zh-CN');
+                    }
+                    const factor = Math.pow(10, decimalPlaces);
+                    const roundedNum = Math.round(num * factor) / factor; // Ensure correct rounding
+                    return roundedNum.toLocaleString('zh-CN', { minimumFractionDigits: decimalPlaces, maximumFractionDigits: decimalPlaces });
+                }
+            },
+            computed: {
+                currentYearResults() {
+                    return this.results[this.currentYear] || {};
+                },
+                totalCompetitionShare() {
+                    // Correctly sum all competition shares
+                    return this.competitionShares.methylphenidate.value +
+                           this.competitionShares.atomoxetine.value +
+                           this.competitionShares.guanfacine.value +
+                           this.competitionShares.clonidine.value; // Now includes the clonidine share
+                },
+                patientFlowDetails() {
+                    const current = this.currentYearResults;
+                    return {
+                        urbanPopulation: current.urbanPopulation,
+                        diagnosedPatients: current.diagnosedPatients,
+                        hospitalVisitedPatients: current.hospitalVisitedPatients,
+                        clonidineCategoryPatients: current.clonidineCategoryPatients,
+                        dyneCoveredPatients: current.dyneCoveredPatients,
+                        adhdWithTDGroup: current.adhdWithTDGroup
+                    };
+                }
+            },
+            watch: {
+                currentYear: {
+                    handler(newYear) {
+                        this.applyYearlyParams(newYear);
+                        // The watcher on `params` will handle `calculateAll` and `saveStateToLocalStorage`.
+                    },
+                    immediate: true
+                },
+                'params.clonidineCategoryShare.value': {
+                    handler(newValue) {
+                        // Keep the competitionShares.clonidine.value in sync
+                        if (this.competitionShares.clonidine.value !== newValue) {
+                            this.competitionShares.clonidine.value = newValue;
+                            // Trigger adjustCompetitionShares to update the competition chart and re-calculate
+                            this.adjustCompetitionShares();
                         }
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(107, 114, 128, 0.3)' }, /* gray-500 with opacity */
-                            ticks: { 
-                                font: { weight: 'bold' },
-                                color: '#d1d5db' /* text-gray-300 */
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { 
-                                font: { weight: 'bold' },
-                                color: '#d1d5db' /* text-gray-300 */
+                    immediate: true
+                },
+                competitionShares: {
+                    handler() {
+                        this.updateCompetitionChart();
+                        this.calculateAll(); // Recalculate all years if competition shares change
+                        this.saveStateToLocalStorage(); // Save state on competitionShares change
+                    },
+                    deep: true
+                },
+                // Watch for changes in any parameter value in `this.params` to trigger recalculation
+                // This will also update the corresponding year's `paramValues` entry
+                'params': {
+                    handler() {
+                        // Update the current year's paramValues entry when this.params changes
+                        if (this.paramValues[this.currentYear]) {
+                            for (const key in this.params) {
+                                // Only update if the value actually changed to prevent infinite loops if something else modifies `this.params`
+                                // and ensure paramValues is reactive
+                                if (this.paramValues[this.currentYear][key] !== this.params[key].value) {
+                                    this.$set(this.paramValues[this.currentYear], key, this.params[key].value);
+                                }
                             }
                         }
+                        this.calculateAll(); // This will recalculate for ALL years, including the current one.
+                        this.saveStateToLocalStorage(); // Save state on params change
+                    },
+                    deep: true
+                },
+                // Watch for changes in paramValues to save
+                paramValues: {
+                    handler() {
+                        this.saveStateToLocalStorage();
+                    },
+                    deep: true
+                },
+                // Watch isLoggedIn to initialize charts once dashboard is visible
+                isLoggedIn(newVal) {
+                    if (newVal) {
+                        // Delay chart initialization slightly to ensure DOM is ready and visible
+                        this.$nextTick(() => {
+                            this.initCharts();
+                            this.calculateAll(); // Initial calculation and chart update
+                        });
                     }
                 }
-            });
-        }
+            },
+            mounted() {
+                // We will try to load state here, but delay full dashboard setup
+                // until after successful login.
+                // For a real application, you might use local storage to persist login state.
+                // Here, for simplicity, we'll start with isLoggedIn = false.
+                this.loadStateFromLocalStorage(); 
+                
+                // If a user was previously logged in (e.g., from local storage), set isLoggedIn to true
+                // For this example, let's keep it simple and require login every time
+                // if (localStorage.getItem('isLoggedIn') === 'true') {
+                //     this.isLoggedIn = true;
+                // }
 
-        // 重置参数
-        window.resetParams = function() {
-            // 清空所有年份的用户特定参数覆盖
-            yearSpecificParams = {};
-            yearSpecificCategoryShares = {};
-            editableContents = { ...initialEditableContents }; // 恢复到初始默认文本
+                // Initial setup for paramValues even if not logged in, so if logged in later, data is ready
+                this.initializeParamValues();
+            },
+            methods: {
+                // =============================================================
+                //                          登录方法                             
+                // =============================================================
+                handleLogin() {
+                    const correctPassword = '123'; // 您可以更改此处的密码
+                    if (this.loginPassword === correctPassword) {
+                        this.isLoggedIn = true;
+                        localStorage.setItem('isLoggedIn', 'true'); // 可以选择在本地存储登录状态
+                        alert('登录成功！欢迎进入系统。');
+                        // 登录成功后，body 的 class 会从 login-body 变为默认，app 的 class 会变为 dashboard-layout
+                        // 触发 isLoggedIn watcher，进而初始化图表和计算数据
+                    } else {
+                        alert('密码错误，请重试。');
+                        this.loginPassword = ''; // 清空密码
+                    }
+                },
+                // =============================================================
+                //                       看板相关方法 (未修改)                     
+                // =============================================================
+                saveStateToLocalStorage() {
+                    try {
+                        const stateToSave = {
+                            currentYear: this.currentYear, // Also save currentYear
+                            params: {}, // Only save current values of params (for the currently displayed year)
+                            paramValues: this.paramValues, // Save all years' param values
+                            competitionShares: this.competitionShares,
+                            pmInsightText: this.pmInsightText,
+                            pmStrategyTipsText: this.pmStrategyTipsText,
+                            adhdTdGroupDescription: this.adhdTdGroupDescription,
+                            competitiveSuggestionsText: this.competitiveSuggestionsText,
+                            rightSideInsightText: this.rightSideInsightText, // Save the new text area content
+                            // isLoggedIn: this.isLoggedIn, // Optionally save login state
+                        };
+                        // Only save the 'value' part of params for simplicity in localStorage
+                        // This ensures that when loading, this.params are correctly populated for the currentYear view
+                        for (const key in this.params) {
+                            stateToSave.params[key] = { value: this.params[key].value };
+                        }
+                        localStorage.setItem('dyneAdhdDashboardState', JSON.stringify(stateToSave));
+                        // console.log("State saved to localStorage."); // Uncomment for debugging
+                    } catch (e) {
+                        console.error("Error saving to localStorage", e);
+                    }
+                },
 
-            // 清除 LocalStorage 中的所有相关数据
-            localStorage.removeItem(LS_KEY_PARAMS);
-            localStorage.removeItem(LS_KEY_CATEGORY_SHARES);
-            localStorage.removeItem(LS_KEY_EDITABLE_CONTENTS);
+                // Method to load state from localStorage
+                loadStateFromLocalStorage() {
+                    try {
+                        const savedState = localStorage.getItem('dyneAdhdDashboardState');
+                        if (savedState) {
+                            const parsedState = JSON.parse(savedState);
+                            
+                            // Restore basic params (these will be the initial values for the currentYear inputs)
+                            for (const key in parsedState.params) {
+                                if (this.params[key]) {
+                                    this.params[key].value = parsedState.params[key].value;
+                                }
+                            }
 
-            // 重置 params 为当前年份的默认趋势值 (并根据 initialParams 确保基准一致)
-            Object.assign(params, initialParams); // 从原始默认值开始
+                            // Restore paramValues for all years
+                            if (parsedState.paramValues) {
+                                this.paramValues = parsedState.paramValues;
+                            } else {
+                                // If paramValues wasn't saved, initialize it with current params
+                                this.initializeParamValues(); 
+                            }
 
-            // 更新左侧参数面板的滑块和显示值
-            loadYearParamsToUI(currentYear);
-            loadEditableContentsToUI();
-            loadCategorySharesToUI(currentYear);
+                            // Restore competition shares
+                            for (const key in parsedState.competitionShares) {
+                                if (this.competitionShares[key]) {
+                                    this.competitionShares[key].value = parsedState.competitionShares[key].value;
+                                }
+                            }
+                            // Ensure clonidine share is synced with params after loading
+                            if (this.competitionShares.clonidine.value !== this.params.clonidineCategoryShare.value) {
+                                this.competitionShares.clonidine.value = this.params.clonidineCategoryShare.value;
+                            }
 
-            updateDisplay(); // 重新计算并显示所有数据
-            alert("所有参数已重置为默认值，并清除了保存的数据！");
-        };
+                            // Restore text fields
+                            if (parsedState.pmInsightText) this.pmInsightText = parsedState.pmInsightText;
+                            if (parsedState.pmStrategyTipsText) this.pmStrategyTipsText = parsedState.pmStrategyTipsText;
+                            if (parsedState.adhdTdGroupDescription) this.adhdTdGroupDescription = parsedState.adhdTdGroupDescription;
+                            if (parsedState.competitiveSuggestionsText) this.competitiveSuggestionsText = parsedState.competitiveSuggestionsText;
+                            if (parsedState.rightSideInsightText) this.rightSideInsightText = parsedState.rightSideInsightText; // Load the new text area content
 
-        // 仪表板初始化函数
-        function initializeDashboard() {
-            loadStateFromLocalStorage(); // 优先从 LocalStorage 加载状态
+                            // Restore currentYear last, as its watcher will trigger applyYearlyParams and subsequent updates
+                            if (parsedState.currentYear) {
+                                this.currentYear = parsedState.currentYear;
+                            }
+                            // if (parsedState.isLoggedIn) this.isLoggedIn = parsedState.isLoggedIn; // Restore login state
 
-            // 首次加载时，需要确保params对象有值，根据currentYear更新一次
-            // 如果localStorage没有覆盖currentYear，则params会保留initialParams的默认值
-            // 如果localStorage有覆盖，则会在loadYearParamsToUI中加载进来
-            loadYearParamsToUI(currentYear); 
-            loadEditableContentsToUI();
-            loadCategorySharesToUI(currentYear);
-            
-            switchYear(currentYear); // 初始化显示当前年份的数据
-        }
-    });
-</script>
+                            // console.log("State loaded from localStorage."); // Uncomment for debugging
+                        } else {
+                            // console.log("No saved state found in localStorage."); // Uncomment for debugging
+                        }
+                    } catch (e) {
+                        console.error("Error loading from localStorage", e);
+                        // Clear corrupted data if parsing fails
+                        localStorage.removeItem('dyneAdhdDashboardState');
+                    }
+                },
+
+                initializeParamValues() {
+                    // This ensures that paramValues for all years are reactive and initialized.
+                    this.years.forEach(year => {
+                        // If paramValues for a year doesn't exist, create it reactively
+                        if (!this.paramValues[year]) {
+                            this.$set(this.paramValues, year, {});
+                        }
+                        for (const key in this.params) {
+                            // Only set if the key doesn't exist for that year, or is undefined.
+                            // This prevents overwriting imported data or loaded data.
+                            if (this.paramValues[year][key] === undefined) {
+                                this.$set(this.paramValues[year], key, this.params[key].value);
+                            }
+                        }
+                    });
+                    // console.log("Initialized paramValues across all years (after potential load):", JSON.parse(JSON.stringify(this.paramValues))); // Uncomment for debugging
+                },
+                applyYearlyParams(year) {
+                    // This method updates `this.params` (which are bound to input fields)
+                    // based on the stored `paramValues` for the given `year`.
+                    // The watcher on `this.params` will then trigger `calculateAll` and `saveStateToLocalStorage`.
+                    if (this.paramValues[year]) {
+                        for (const key in this.params) {
+                            if (this.params[key].value !== this.paramValues[year][key]) {
+                                this.params[key].value = this.paramValues[year][key];
+                            }
+                        }
+                        // Explicitly sync clonidine share in competitionShares with params.clonidineCategoryShare
+                        if (this.competitionShares.clonidine.value !== this.params.clonidineCategoryShare.value) {
+                             this.competitionShares.clonidine.value = this.params.clonidineCategoryShare.value;
+                        }
+                    }
+                    // console.log(`Applied parameters for year ${year} to input fields (this.params):`, JSON.parse(JSON.stringify(this.params))); // Uncomment for debugging
+                },
+                calculateAll() {
+                    // Only calculate if logged in and if charts exist (to prevent errors during initial load before mounted)
+                    if (!this.isLoggedIn) return; 
+
+                    // Recalculate results for ALL years and then update charts.
+                    this.years.forEach(year => {
+                        this.calculateForYear(year);
+                    });
+                    this.updateCharts(); // Update charts after all calculations are done
+                    // console.log("All years calculated results:", JSON.parse(JSON.stringify(this.results))); // Uncomment for debugging
+                },
+                calculateForYear(year) {
+                    const yearParams = this.paramValues[year]; 
+                    if (!yearParams) {
+                        console.warn(`paramValues for year ${year} not found. Skipping calculation.`);
+                        return;
+                    }
+                    
+                    // All percentage values are stored as numbers (e.g., 66 for 66%) in `params` and `paramValues`.
+                    // They need to be divided by 100 for calculations.
+                    // population6_17 is already in '万人', no need to multiply by 10000 here for urbanPopulation_wan
+                    const population6_17_raw = yearParams.population6_17; 
+
+                    const urbanizationRate_pct = yearParams.urbanizationRate / 100;
+                    const prevalenceRate_pct = yearParams.prevalenceRate / 100;
+                    const diagnosisRate_pct = yearParams.diagnosisRate / 100;
+                    const hospitalVisitRate_pct = yearParams.hospitalVisitRate / 100;
+                    const adhdWithTDRatio_pct = yearParams.adhdWithTDRatio / 100;
+                    const medicationTreatmentRate_pct = yearParams.medicationTreatmentRate / 100;
+                    const clonidineCategoryShare_pct = yearParams.clonidineCategoryShare / 100;
+                    const clonidineDyneShare_pct = yearParams.clonidineDyneShare / 100;
+
+                    const urbanPopulation_wan = population6_17_raw * urbanizationRate_pct;
+                    const adhdPatients_wan = urbanPopulation_wan * prevalenceRate_pct;
+                    const diagnosedPatients_wan = adhdPatients_wan * diagnosisRate_pct;
+                    const hospitalVisitedPatients_wan = diagnosedPatients_wan * hospitalVisitRate_pct;
+                    const adhdWithTDGroup_wan = diagnosedPatients_wan * adhdWithTDRatio_pct;
+                    const medicatedPatients_wan = hospitalVisitedPatients_wan * medicationTreatmentRate_pct;
+                    const clonidineCategoryPatients_wan = medicatedPatients_wan * clonidineCategoryShare_pct;
+                    const dyneCoveredPatients_people = clonidineCategoryPatients_wan * clonidineDyneShare_pct * 10000; // Convert to '人' for intermediate calculation
+
+                    const annualConsumptionPerPatient =
+                        yearParams.singlePrescriptionPills *
+                        yearParams.annualRepurchaseTimes *
+                        yearParams.productUnitPrice;
+
+                    const estimatedSales_wan =
+                        (dyneCoveredPatients_people * annualConsumptionPerPatient) / 10000; // Result in '万元'
+
+                    this.$set(this.results, year, {
+                        urbanPopulation: urbanPopulation_wan,
+                        adhdPatients: adhdPatients_wan,
+                        diagnosedPatients: diagnosedPatients_wan,
+                        hospitalVisitedPatients: hospitalVisitedPatients_wan,
+                        adhdWithTDGroup: adhdWithTDGroup_wan,
+                        medicatedPatients: medicatedPatients_wan,
+                        clonidineCategoryPatients: clonidineCategoryPatients_wan, // This is still in '万' for display
+                        dyneCoveredPatients: dyneCoveredPatients_people, // This is in '人', will be converted for display
+                        estimatedSales: estimatedSales_wan,
+                        perCapitaAnnualConsumption: annualConsumptionPerPatient
+                    });
+                },
+                initCharts() {
+                    // Ensure charts are initialized only if they don't exist yet, or are explicitly reset.
+                    if (this.salesChart) {
+                        this.salesChart.dispose(); // Dispose previous instance if exists
+                    }
+                    if (this.competitionChart) {
+                        this.competitionChart.dispose(); // Dispose previous instance if exists
+                    }
+
+                    this.salesChart = echarts.init(document.getElementById('salesChart'));
+                    this.competitionChart = echarts.init(document.getElementById('competitionChart'));
+                    window.removeEventListener('resize', this.resizeCharts); // Remove old listener
+                    window.addEventListener('resize', this.resizeCharts); // Add new listener
+                },
+                resizeCharts() {
+                    if (this.salesChart) this.salesChart.resize();
+                    if (this.competitionChart) this.competitionChart.resize();
+                },
+                updateCharts() {
+                    if (!this.salesChart || !this.competitionChart) return; // Don't update if not initialized
+                    this.updateSalesChart();
+                    this.updateCompetitionChart();
+                },
+                updateSalesChart() {
+                    // Collect sales data for each year from the calculated results
+                    const salesData = this.years.map(year => {
+                        // Ensure we use the calculated `estimatedSales` for each year
+                        const sales = this.results[year]?.estimatedSales;
+                        // Return the sales value, formatted to 2 decimal places, or 0 if not available
+                        return sales ? parseFloat(sales.toFixed(2)) : 0;
+                    });
+
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            },
+                            formatter: function (params) {
+                                let res = params[0].name + '年';
+                                params.forEach(item => {
+                                    res += '<br/>' + item.marker + item.seriesName + ': ' + (item.value ? item.value.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '-') + '万元';
+                                });
+                                return res;
+                            },
+                            backgroundColor: 'rgba(42, 42, 74, 0.8)',
+                            borderColor: '#a0a0ff',
+                            borderWidth: 1,
+                            textStyle: {
+                                color: '#ffffff'
+                            }
+                        },
+                        legend: {
+                            data: ['预估年度营收(万元)'],
+                            textStyle: { color: '#c0c0c0' },
+                            right: '10%'
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: this.years,
+                            axisLabel: { color: '#c0c0c0' },
+                            axisLine: { lineStyle: { color: '#444' } },
+                            splitLine: { show: false }
+                        },
+                        yAxis: [
+                            {
+                                type: 'value',
+                                name: '预估年度营收 (万元)',
+                                axisLabel: {
+                                    formatter: '{value}',
+                                    color: '#c0c0c0'
+                                },
+                                nameTextStyle: { color: '#c0c0c0' },
+                                splitLine: { lineStyle: { color: '#3c3c5e' } },
+                                axisLine: { lineStyle: { color: '#444' } }
+                            }
+                        ],
+                        series: [
+                            {
+                                name: '预估年度营收(万元)',
+                                type: 'line',
+                                smooth: true,
+                                data: salesData, // Use the collected sales data here
+                                itemStyle: {
+                                    color: '#ee66a7'
+                                },
+                                lineStyle: {
+                                    width: 3
+                                },
+                                areaStyle: {
+                                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                        offset: 0,
+                                        color: 'rgba(238, 102, 167, 0.4)'
+                                    }, {
+                                        offset: 1,
+                                        color: 'rgba(238, 102, 167, 0)'
+                                    }])
+                                },
+                                symbol: 'circle',
+                                symbolSize: 8,
+                                emphasis: {
+                                    itemStyle: {
+                                        borderColor: '#fff',
+                                        borderWidth: 2
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    this.salesChart.setOption(option, true); // Use true for `notMerge` to ensure full refresh
+                },
+                updateCompetitionChart() {
+                    const chartData = Object.values(this.competitionShares).map(item => ({
+                        name: item.label,
+                        value: item.value
+                    }));
+
+                    const option = {
+                        backgroundColor: 'transparent',
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: '{a} <br/>{b}: {c}% ({d}%)', // Show value as percentage
+                            backgroundColor: 'rgba(42, 42, 74, 0.8)',
+                            borderColor: '#a0a0ff',
+                            borderWidth: 1,
+                            textStyle: {
+                                color: '#ffffff'
+                            }
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: Object.values(this.competitionShares).map(item => item.label),
+                            textStyle: { color: '#c0c0c0' }
+                        },
+                        series: [
+                            {
+                                name: '品类份额',
+                                type: 'pie',
+                                radius: ['50%', '70%'],
+                                avoidLabelOverlap: false,
+                                label: {
+                                    show: false,
+                                    position: 'center'
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: '20',
+                                        fontWeight: 'bold',
+                                        color: '#ffffff'
+                                    }
+                                },
+                                labelLine: {
+                                    show: false
+                                },
+                                data: chartData,
+                                itemStyle: {
+                                    borderColor: '#2a2a4a',
+                                    borderWidth: 2
+                                }
+                            }
+                        ],
+                         color: ['#a0a0ff', '#ffcc00', '#2ecc71', '#ee66a7'] // Adjusted color palette
+                    };
+                    this.competitionChart.setOption(option);
+                },
+                adjustCompetitionShares() {
+                    // This line was correctly updated in the previous turn to use params.clonidineCategoryShare.value
+                    this.competitionShares.clonidine.value = this.params.clonidineCategoryShare.value;
+
+                    // Additionally, if the total exceeds 100%, alert the user.
+                    let currentSum = this.totalCompetitionShare;
+                    if (currentSum > 100.01) { // Allow slight floating point tolerance
+                        console.warn("警告：品类总份额超过100%。请调整其他药物的份额。");
+                        // alert("警告：品类总份额超过100%。请调整其他药物的份额。"); // Uncomment if you want an alert
+                    }
+                },
+                resetParams() {
+                    // Deep copy initial state to reset
+                    const initialParams = {
+                        population6_17: { value: 1.52 * 10000, min: 1000, max: 3000, unit: '万人' },
+                        urbanizationRate: { value: 66, min: 0, max: 100, unit: '%' },
+                        prevalenceRate: { value: 6.2, min: 0, max: 100, unit: '%' },
+                        diagnosisRate: { value: 15, min: 0, max: 100, unit: '%' },
+                        hospitalVisitRate: { value: 80, min: 0, max: 100, unit: '%' },
+                        adhdWithTDRatio: { value: 30, min: 0, max: 100, unit: '%' },
+                        medicationTreatmentRate: { value: 70, min: 0, max: 100, unit: '%' },
+                        clonidineCategoryShare: { value: 5, min: 0, max: 100, unit: '%' },
+                        clonidineDyneShare: { value: 40, min: 0, max: 100, unit: '%' },
+                        singlePrescriptionPills: { value: 30, min: 1, max: 365, unit: '片' },
+                        annualRepurchaseTimes: { value: 12, min: 1, max: 20, unit: '次' },
+                        productUnitPrice: { value: 2.0, min: 0.1, max: 100, unit: '元/片' },
+                    };
+                    for (const key in initialParams) {
+                        this.params[key].value = initialParams[key].value;
+                    }
+
+                    const initialCompetitionShares = {
+                        methylphenidate: { label: '哌甲酯类（兴奋剂）', value: 40, type: '(一线)' },
+                        atomoxetine: { label: '托莫西汀（非兴奋剂）', value: 30, type: '(一线)' },
+                        guanfacine: { label: '胍法辛（非兴奋剂）', value: 20, type: '(ADHD二线、ADHD+TD一线)' },
+                        clonidine: { label: '可乐定类（非兴奋剂）', value: 5, type: '(ADHD二线、ADHD+TD一线)', fixed: true },
+                    };
+                    for (const key in initialCompetitionShares) {
+                        this.competitionShares[key].value = initialCompetitionShares[key].value;
+                    }
+                    
+                    this.pmInsightText = '2026达因上市需打破“二线治疗”标签,利用缓释片平稳性切入ADHD+TD一线推荐。\n\n目前品类份额中，兴奋剂和托莫西汀占据主导地位，达因需在细分市场（如ADHD+TD）寻求突破。';
+                    this.pmStrategyTipsText = '图表显示，如果诊断率在2030年能通过学术推广从15%提升至20%，达因的营收曲线将获得额外的35%增长空间。建议加大非专科医生的ADHD筛查培训。';
+                    this.adhdTdGroupDescription = '针对这部分20%-50%的合并抽动障碍患者，达因可乐定具有绝对临床首选推荐地位。该亚组是达因的核心目标市场。';
+                    this.competitiveSuggestionsText = '强调“缓释片”较普通片剂的血药浓度平稳性,提升耐受。\n绑定“ADHD专家共识”,强化合并TD时的一线地位。\n差异化竞争:避开托莫西汀的集采红海。\n加强市场教育，提升产品在非兴奋剂市场的认知度。';
+                    this.rightSideInsightText = ''; // Reset the new text area content as well
+
+                    // Clear paramValues completely and then re-initialize with current (default) params
+                    this.paramValues = {}; 
+                    this.initializeParamValues(); // This will populate paramValues for all years with these default params
+                    this.applyYearlyParams(this.currentYear); // Ensure current year inputs reflect the default. This will trigger params watcher.
+                    // calculateAll() and saveStateToLocalStorage() will be triggered by the `params` watcher.
+                    alert("参数已重置为默认值！");
+                },
+
+                handleFileUpload(event) {
+                    this.selectedFile = event.target.files[0];
+                },
+
+                importParameters() {
+                    if (!this.selectedFile) {
+                        alert("请选择一个 Excel 或 CSV 文件。");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const data = e.target.result;
+                        let parsedData;
+
+                        try {
+                            const workbook = XLSX.read(data, { type: 'binary' });
+                            const sheetName = workbook.SheetNames[0];
+                            parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                            this.processImportedData(parsedData);
+                        } catch (error) {
+                            console.error("解析文件出错:", error);
+                            console.error("错误堆栈:", error.stack);
+                            alert("解析文件出错，请检查文件格式是否正确。详细信息请查看控制台。");
+                        }
+                    };
+
+                    reader.onerror = (error) => {
+                        console.error("文件读取失败:", error);
+                        alert("文件读取失败，请重试或检查文件是否损坏。");
+                    };
+
+                    reader.readAsBinaryString(this.selectedFile);
+                },
+
+                // Helper function to normalize parameter names for matching
+                normalizeParamName(name) {
+                    if (!name) return '';
+                    let cleanedName = String(name).trim();
+                    // Replace all types of spaces (including non-breaking space)
+                    cleanedName = cleanedName.replace(/\s+/g, ''); 
+                    // Convert Chinese full-width parentheses to English half-width
+                    cleanedName = cleanedName.replace(/（/g, '(').replace(/）/g, ')');
+                    // Remove trailing "(%)" if present
+                    cleanedName = cleanedName.replace(/\(%?\)$/, ''); 
+                    return cleanedName;
+                },
+
+                processImportedData(data) {
+                    if (!data || data.length < 2) {
+                        alert("文件内容为空或格式不正确。请确保第一行为年份，第一列为参数名称。");
+                        return;
+                    }
+
+                    const headers = data[0];
+                    const dataRows = data.slice(1);
+
+                    // Parse years from headers, starting from the second column
+                    const csvYears = headers.slice(1).map(yearStr => parseInt(String(yearStr).trim()));
+                    const supportedYears = this.years;
+
+                    const invalidYearsInFile = csvYears.filter(year => !supportedYears.includes(year) || isNaN(year));
+                    if (invalidYearsInFile.length > 0) {
+                        alert(`文件中包含不支持的年份或格式错误: ${invalidYearsInFile.join(', ')}。请确保年份在 ${this.startYear}-${this.maxYear} 范围内。`);
+                        return;
+                    }
+                    if (csvYears.length === 0) {
+                        alert("导入文件中未检测到年份数据。请确保第二列及以后是年份。");
+                        return;
+                    }
+
+                    // Define paramMap with normalized keys for easier matching
+                    const paramMap = {
+                        "6-17岁总人口(万人)": { key: 'population6_17', type: 'param' },
+                        "城镇化率": { key: 'urbanizationRate', type: 'param' },
+                        "患病率": { key: 'prevalenceRate', type: 'param' },
+                        "诊断率": { key: 'diagnosisRate', type: 'param' },
+                        "医院就诊率": { key: 'hospitalVisitRate', type: 'param' },
+                        "ADHD合并TD比例": { key: 'adhdWithTDRatio', type: 'param' },
+                        "药物治疗比例": { key: 'medicationTreatmentRate', type: 'param' },
+                        "可乐定品类份额": { key: 'clonidineCategoryShare', type: 'param' },
+                        "可乐定中达因份额": { key: 'clonidineDyneShare', type: 'param' },
+                        "单次处方片数": { key: 'singlePrescriptionPills', type: 'param' },
+                        "年度复购次数": { key: 'annualRepurchaseTimes', type: 'param' },
+                        "产品单价(元/片)": { key: 'productUnitPrice', type: 'param' },
+                        // Competition Shares are treated as 'competition' type here, and their values
+                        // will be updated in `this.competitionShares` directly.
+                        "哌甲酯类(兴奋剂)份额": { key: 'methylphenidate', type: 'competition' },
+                        "托莫西汀(非兴奋剂)份额": { key: 'atomoxetine', type: 'competition' },
+                        "胍法辛(非兴奋剂)份额": { key: 'guanfacine', type: 'competition' },
+                    };
+
+                    // Create temporary copies to prevent direct modification during iteration and ensure reactivity
+                    const newParamValues = JSON.parse(JSON.stringify(this.paramValues));
+                    const tempCompetitionShares = JSON.parse(JSON.stringify(this.competitionShares));
+
+                    let updatedCount = 0;
+                    dataRows.forEach((row, rowIndex) => {
+                        const rawParamDisplayName = String(row[0]).trim();
+                        if (!rawParamDisplayName) {
+                            return;
+                        }
+
+                        const cleanedParamDisplayName = this.normalizeParamName(rawParamDisplayName);
+                        const paramInfo = paramMap[cleanedParamDisplayName];
+
+                        if (paramInfo) {
+                            const internalKey = paramInfo.key;
+
+                            if (paramInfo.type === 'competition') { 
+                                // Competition shares typically get one value for the entire period from the first data column.
+                                const rawValue = row[1]; // Value is in the second column (index 1) for competition shares
+                                let value = parseFloat(rawValue);
+
+                                if (!isNaN(value) && tempCompetitionShares[internalKey] && !tempCompetitionShares[internalKey].fixed) {
+                                    tempCompetitionShares[internalKey].value = value;
+                                    updatedCount++;
+                                } else if (tempCompetitionShares[internalKey] && tempCompetitionShares[internalKey].fixed) {
+                                    // console.warn(`Skipping fixed competition share "${rawParamDisplayName}".`); // Uncomment for debugging
+                                } else {
+                                    console.warn(`Row ${rowIndex + 2}, Col 2: Value "${rawValue}" for competition share "${rawParamDisplayName}" is not a number or key not found in competitionShares, skipping.`);
+                                }
+                            } else { // Regular parameters, expected to have values for each year
+                                csvYears.forEach((year, colIndex) => {
+                                    const rawValue = row[colIndex + 1]; // +1 because first column is param name
+                                    let value = parseFloat(rawValue);
+
+                                    if (!isNaN(value)) {
+                                        // Ensure the target year and parameter key exist in newParamValues and update reactively
+                                        if (newParamValues[year] && newParamValues[year][internalKey] !== undefined) {
+                                            newParamValues[year][internalKey] = value; // Update the value
+                                            updatedCount++;
+                                        } else {
+                                            console.warn(`Param "${internalKey}" for year ${year} not found in paramValues structure or is undefined, skipping update.`);
+                                        }
+                                    } else {
+                                        console.warn(`Row ${rowIndex + 2}, Col ${colIndex + 2} (Year ${year}): Value "${rawValue}" for param "${rawParamDisplayName}" is not a number, skipping.`);
+                                    }
+                                });
+                            }
+                        } else {
+                            console.warn(`Row ${rowIndex + 2}: Imported parameter name "${rawParamDisplayName}" (processed: "${cleanedParamDisplayName}") not found or matched in the system. This parameter will be skipped.`);
+                        }
+                    });
+
+                    if (updatedCount > 0) {
+                        this.paramValues = newParamValues; // Assign the updated paramValues
+                        this.competitionShares = tempCompetitionShares; // Assign the updated competition shares
+
+                        // After importing, apply parameters for the current selected year to the input fields.
+                        // This action will trigger the `params` watcher, which then calls `calculateAll()` and `saveStateToLocalStorage()`.
+                        this.applyYearlyParams(this.currentYear); 
+                        alert(`参数已成功导入！共更新 ${updatedCount} 个数据点。`);
+                    } else {
+                        alert("未从文件中导入任何有效参数。请检查文件内容和格式，确保参数名称与系统匹配，且年份正确。详细信息请查看控制台。");
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
